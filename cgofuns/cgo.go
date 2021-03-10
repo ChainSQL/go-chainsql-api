@@ -2,8 +2,8 @@ package cgofuns
 
 /*
    #cgo CFLAGS: -I.
-   #cgo LDFLAGS: -L ./clib/ -lsignature -lstdc++
-   #cgo LDFLAGS: -lboost_regex -lcrypto -lssl -ldl -lstdc++
+   #cgo windows LDFLAGS: -L ./clib/win/ -lsignature -lboost_regex -lcrypto -lssl -lgdi32 -lstdc++
+   #cgo linux LDFLAGS: -L ./clib/linux/ -lsignature -lboost_regex -lcrypto -lssl -ldl -lstdc++
    #include "key_manager_api_c.h"
    #include "stdlib.h"
 */
@@ -20,7 +20,7 @@ func cChar2byte(cPtr *C.uchar, cLen uint64, goSlice *[]byte) {
 		*goSlice = append(*goSlice, j)
 		p += unsafe.Sizeof(j)
 	}
-       // fmt.Println("go slice is : ", striIng(*goSlice))
+	// fmt.Println("go slice is : ", striIng(*goSlice))
 }
 
 //CGOFun is used to call the functions in c libry.
@@ -71,7 +71,7 @@ func (o *CGOFun) SignPlainData(sPrivateKey string, sPlain string, pSignedData *[
 
 	cChar2byte(pCData, uint64(iLenData), pSignedData)
 
-        //fmt.Println(string(*pSignedData))
+	//fmt.Println(string(*pSignedData))
 
 	return true
 }
@@ -81,17 +81,17 @@ func (o *CGOFun) GetValicBLCAddress(pAccount *[]byte, pPublicKey *[]byte, pPubli
 	var iAccountLen, iPublicKey, iPublicKeyHex, iPrivateKey C.ulong
 	var pCAccount, pCPubKey, pCPubKeyHex, pPriKey *C.uchar
 
-        pSeed :=(*C.uchar)(C.NULL)
-        if(len(*pPrivateKey))>0{
-            pSeed = (*C.uchar)(unsafe.Pointer(&(*pPrivateKey)[0]))
-        }
+	pSeed := (*C.uchar)(C.NULL)
+	if (len(*pPrivateKey)) > 0 {
+		pSeed = (*C.uchar)(unsafe.Pointer(&(*pPrivateKey)[0]))
+	}
 	bRet := C.get_valid_address(pSeed, (C.ulong)(len(*pPrivateKey)),
-                &pCAccount, &iAccountLen,
+		&pCAccount, &iAccountLen,
 		&pCPubKey, &iPublicKey,
 		&pCPubKeyHex, &iPublicKeyHex,
 		&pPriKey, &iPrivateKey)
-        if !bRet {
-                fmt.Println("fail to get address from c library")
+	if !bRet {
+		fmt.Println("fail to get address from c library")
 		return false
 	}
 	defer C.free(unsafe.Pointer(pCAccount))
@@ -104,10 +104,10 @@ func (o *CGOFun) GetValicBLCAddress(pAccount *[]byte, pPublicKey *[]byte, pPubli
 	cChar2byte(pCAccount, uint64(iAccountLen), pAccount)
 	cChar2byte(pCPubKey, uint64(iPublicKey), pPublicKey)
 	cChar2byte(pCPubKeyHex, uint64(iPublicKeyHex), pPublicKeyHex)
-        if(len(*pPrivateKey)<=0){
-            // fmt.Println("test come here")
-            cChar2byte(pPriKey, uint64(iPrivateKey), pPrivateKey)
-        }
+	if len(*pPrivateKey) <= 0 {
+		// fmt.Println("test come here")
+		cChar2byte(pPriKey, uint64(iPrivateKey), pPrivateKey)
+	}
 
 	return true
 }
