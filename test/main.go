@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"time"
+	"fmt"
 
 	"github.com/ChainSQL/go-chainsql-api/core"
 	"github.com/gorilla/websocket"
@@ -35,7 +36,8 @@ func main() {
 	// testInsert(c)
 	// testGetLedger(c)
 	// testSignPlainText(c)
-	// testGetTableData(c)
+	testGetTableData(c)
+	// testGetBySqlUser(c)
 	// testWebsocket()
 }
 
@@ -105,6 +107,24 @@ func testGetTableData(c *core.Chainsql){
 		time.Sleep(time.Second * 10)
 	}
 }
+
+func testGetBySqlUser(c *core.Chainsql){
+	nameInDB, err := c.GetNameInDB("zHb9CJAWyB4zj91VRWn96DkukG4bwdtyTh","hello")
+	if err != nil {
+		log.Println(err)
+	}
+	sql := fmt.Sprintf("select * from t_%s limit 0,10",nameInDB)
+	ret,err := c.GetBySqlUser(sql);
+	if err != nil{
+		log.Println(err)
+		return
+	}
+	log.Printf("The first 10 records:%s\n",ret)
+	for {
+		time.Sleep(time.Second * 10)
+	}
+}
+
 func testGetLedger(c *core.Chainsql){
 	for i := 20; i < 25; i++ {
 		ledger := c.GetLedger(i)

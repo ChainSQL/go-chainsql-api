@@ -24,6 +24,13 @@ type TableListSetJSON struct {
 	AutoFillField string
 }
 
+
+type TableGetSqlJSON struct{
+	Account 	string
+	Sql 		string
+	LedgerIndex int
+}
+
 // NewChainsql is a function that create a chainsql object
 func NewChainsql() *Chainsql {
 	chainsql := &Chainsql{
@@ -95,4 +102,27 @@ func (c *Chainsql) GenerateAccount(args ...string) (string,error) {
 //SignPlainData sign a plain text and return the signature
 func (c *Chainsql) SignPlainData(privateKey string,data string) (string,error){
 	return util.SignPlainData(privateKey,data)
+}
+
+//GetNameInDB request for table nameInDB
+func (c *Chainsql) GetNameInDB(address string, tableName string) (string, error){
+	return c.client.GetNameInDB(address,tableName)
+}
+
+//GetBySqlUser is used to select from database by sql
+func (c *Chainsql) GetBySqlUser(sql string) (string,error){
+	data := &TableGetSqlJSON{
+		Account : c.client.Auth.Address,
+		Sql: sql,
+	}
+	if c.client.ServerInfo.Updated {
+		data.LedgerIndex = c.client.ServerInfo.LedgerIndex
+	} else {
+		ledgerIndex, err := c.client.GetLedgerVersion()
+		if err != nil{
+			return "",err
+		}
+		data.LedgerIndex = ledgerIndex
+	}
+	return c.client.GetTableData(data,true)
 }

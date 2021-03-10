@@ -158,7 +158,7 @@ func (t *Table)Request() (string,error){
 	data.Raw = string(strQuery)
 	data.Account = t.client.Auth.Address
 	data.Owner = t.client.Auth.Owner
-	return t.client.GetTableData(data)
+	return t.client.GetTableData(data,false)
 }
 
 //PrepareTx prepare tx json for submit

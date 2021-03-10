@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"sync"
+	"errors"
 
 	"github.com/ChainSQL/go-chainsql-api/common"
 	"github.com/ChainSQL/go-chainsql-api/event"
@@ -270,7 +271,7 @@ func (c *Client) UnSubscribeTx(hash string) {
 	c.asyncRequest(req)
 }
 
-func (c *Client) GetTableData(dataJSON interface{}) (string,error){
+func (c *Client) GetTableData(dataJSON interface{},bSql bool) (string,error){
 	type Request struct{
 		common.RequestBase
 		PublicKey 	string `json:"publicKey"`
@@ -282,10 +283,12 @@ func (c *Client) GetTableData(dataJSON interface{}) (string,error){
 	req := &Request{}
 	req.ID = c.cmdIDs
 	req.Command = "r_get"
+	if bSql{
+		req.Command = "r_get_sql_user"
+	}
 	req.TxJSON = dataJSON
 	accStr,err := util.GenerateAccount(c.Auth.Secret)
 	if err != nil {
-		log.Println(err)
 		return "",err
 	}
 	publicKey, err := jsonparser.GetString([]byte(accStr), "publicKeyHex")
@@ -307,8 +310,18 @@ func (c *Client) GetTableData(dataJSON interface{}) (string,error){
 
 	request := c.syncRequest(req)
 
+	status,err := jsonparser.GetString([]byte(request.Response.Value), "status")
+	if err != nil{
+		return "",err
+	}
+	if status != "success"{
+		errorMsg,_ := jsonparser.GetString([]byte(request.Response.Value), "error_message")
+		return "",errors.New(errorMsg)
+	}
+
 	result,_,_, err := jsonparser.Get([]byte(request.Response.Value), "result")
 	if err != nil{
+		// log.Printf("Cleint::GetTableData %s\n",err)
 		return "", err
 	}
 	// log.Printf("type:%T\n",result)
