@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/go-chainsql-api/common"
-	"github.com/go-chainsql-api/net"
-	"github.com/go-chainsql-api/util"
+	"github.com/ChainSQL/go-chainsql-api/common"
+	"github.com/ChainSQL/go-chainsql-api/net"
+	"github.com/ChainSQL/go-chainsql-api/util"
 )
 
 //OpInfo is the opearting details

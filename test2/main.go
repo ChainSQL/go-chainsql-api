@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/go-chainsql-api/cgofuns"
+	"github.com/ChainSQL/go-chainsql-api/cgofuns"
 )
 
 func main() {

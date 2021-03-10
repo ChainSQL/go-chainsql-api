@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/go-chainsql-api/core"
+	"github.com/ChainSQL/go-chainsql-api/core"
 	"github.com/gorilla/websocket"
 	"github.com/buger/jsonparser"
 )

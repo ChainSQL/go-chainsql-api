@@ -1,4 +1,4 @@
-module github.com/go-chainsql-api
+module github.com/ChainSQL/go-chainsql-api
 
 go 1.15
 

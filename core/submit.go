@@ -6,10 +6,10 @@ import (
 	"sync"
 
 	"github.com/buger/jsonparser"
-	"github.com/go-chainsql-api/export"
-	"github.com/go-chainsql-api/net"
-	"github.com/go-chainsql-api/util"
-	"github.com/go-chainsql-api/cgofuns"
+	"github.com/ChainSQL/go-chainsql-api/export"
+	"github.com/ChainSQL/go-chainsql-api/net"
+	"github.com/ChainSQL/go-chainsql-api/util"
+	"github.com/ChainSQL/go-chainsql-api/cgofuns"
 )
 
 // TxJSON is a type indicate a transaction json

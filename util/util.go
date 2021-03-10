@@ -3,8 +3,8 @@ package util
 import(
 	"encoding/json"
 	"errors"
-	"github.com/go-chainsql-api/cgofuns"
-	"github.com/go-chainsql-api/common"
+	"github.com/ChainSQL/go-chainsql-api/cgofuns"
+	"github.com/ChainSQL/go-chainsql-api/common"
 )
 
 //GetExtraFee get fee by data for chainsql tx

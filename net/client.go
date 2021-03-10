@@ -6,10 +6,10 @@ import (
 	"log"
 	"sync"
 
-	"github.com/go-chainsql-api/common"
-	"github.com/go-chainsql-api/event"
-	"github.com/go-chainsql-api/export"
-	"github.com/go-chainsql-api/util"
+	"github.com/ChainSQL/go-chainsql-api/common"
+	"github.com/ChainSQL/go-chainsql-api/event"
+	"github.com/ChainSQL/go-chainsql-api/export"
+	"github.com/ChainSQL/go-chainsql-api/util"
 
 	"github.com/buger/jsonparser"
 )

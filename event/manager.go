@@ -4,8 +4,8 @@ import (
 	"log"
 
 	"github.com/buger/jsonparser"
-	"github.com/go-chainsql-api/export"
-	"github.com/go-chainsql-api/util"
+	"github.com/ChainSQL/go-chainsql-api/export"
+	"github.com/ChainSQL/go-chainsql-api/util"
 )
 
 // Manager manages the subscription
