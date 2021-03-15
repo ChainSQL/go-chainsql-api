@@ -4,7 +4,8 @@ package cgofuns
    #cgo CFLAGS: -I.
    #cgo windows LDFLAGS: -L ./clib/win/ -lsignature -lboost_regex -lcrypto -lssl -lgdi32 -lstdc++
    #cgo linux LDFLAGS: -L ./clib/linux/ -lsignature -lboost_regex -lcrypto -lssl -ldl -lstdc++
-   #cgo darwin LDFLAGS: -L ./clib/darwin/ -lsignature -lboost_regex -lcrypto -lssl -lstdc++  
+   #cgo linux LDFLAGS: -Wl,-rpath="./"
+   #cgo darwin LDFLAGS: -L ./clib/darwin/ -lsignature -lboost_regex -lcrypto -lssl -lstdc++
    #include "key_manager_api_c.h"
    #include "stdlib.h"
 */
