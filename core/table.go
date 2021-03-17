@@ -2,10 +2,10 @@ package core
 
 import (
 	"encoding/json"
-	"strings"
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/ChainSQL/go-chainsql-api/common"
 	"github.com/ChainSQL/go-chainsql-api/net"
@@ -14,8 +14,8 @@ import (
 
 //OpInfo is the opearting details
 type OpInfo struct {
-	Raw  string
-	Exec int16
+	Raw   string
+	Exec  int16
 	Query []interface{}
 }
 
@@ -27,10 +27,10 @@ type TableJSON struct {
 	AutoFillField string `json:"AutoFillField,omitempty"`
 }
 
-type TableGetJSON struct{
+type TableGetJSON struct {
 	common.TableFields
-	Owner         string
-	LedgerIndex   int
+	Owner       string
+	LedgerIndex int
 }
 
 //Table is used to process insert/delete/update/get operation
@@ -46,8 +46,8 @@ func NewTable(name string, client *net.Client) *Table {
 	table := &Table{
 		name:   name,
 		client: client,
-		op:     &OpInfo{
-			Query: make([]interface{},0),
+		op: &OpInfo{
+			Query: make([]interface{}, 0),
 		},
 	}
 	table.SubmitBase.client = table.client
@@ -63,67 +63,69 @@ func (t *Table) Insert(value string) *Table {
 }
 
 //Get is used to select data from table
-//parameter raw is a json-object string like {"$and":[{ "id": 2},{ "name": "张三"}]}
-func (t *Table) Get(raw string) *Table{
+//parameter raw is a json-object string like
+// {"$and":[{ "id": 2},{ "name": "张三"}]}
+func (t *Table) Get(raw string) *Table {
 	t.op.Exec = util.RGet
-	if raw != ""{
+	if raw != "" {
 		var jsonObj interface{}
 		json.Unmarshal([]byte(raw), &jsonObj)
-		t.op.Query = append(t.op.Query,jsonObj)
+		t.op.Query = append(t.op.Query, jsonObj)
 	}
 	return t
 }
 
 //Limit is used to limit the record count
 //parameter is a json-object string like {"total":10, "index":0}
-func (t *Table)Limit(limit string) *Table{
-	type LimitObj struct{
+func (t *Table) Limit(limit string) *Table {
+	type LimitObj struct {
 		Limit interface{} `json:"$limit"`
 	}
 	var jsonObj interface{}
 	json.Unmarshal([]byte(limit), &jsonObj)
 	limitObj := LimitObj{
-		Limit:jsonObj,
+		Limit: jsonObj,
 	}
-	t.op.Query = append(t.op.Query,limitObj)
+	t.op.Query = append(t.op.Query, limitObj)
 	return t
 }
+
 //Order is used to order the result record
 //parameter is a json-array string like [{"id":1},{"name":-1}]
-func (t *Table)Order(raw string) *Table{
-	type OrderObj struct{
+func (t *Table) Order(raw string) *Table {
+	type OrderObj struct {
 		Order []interface{} `json:"$order"`
 	}
 	var jsonObj []interface{}
 	json.Unmarshal([]byte(raw), &jsonObj)
 	orderObj := OrderObj{
-		Order:jsonObj,
+		Order: jsonObj,
 	}
-	t.op.Query = append(t.op.Query,orderObj)
+	t.op.Query = append(t.op.Query, orderObj)
 	return t
 }
 
-func (t *Table)WithFields(raw string) *Table{
+func (t *Table) WithFields(raw string) *Table {
 	var jsonObj interface{}
 	json.Unmarshal([]byte(raw), &jsonObj)
-	t.op.Query = append([]interface{}{jsonObj},t.op.Query...)
+	t.op.Query = append([]interface{}{jsonObj}, t.op.Query...)
 	return t
 }
 
 //Request is used to end a get operation and send request
-func (t *Table)Request() (string,error){
-	if t.op.Exec != util.RGet{
-		return "",errors.New("Not a get operation")
+func (t *Table) Request() (string, error) {
+	if t.op.Exec != util.RGet {
+		return "", errors.New("Not a get operation")
 	}
 	// check withFields
 	addedWithFields := true
 	if len(t.op.Query) == 0 {
 		addedWithFields = false
-	}else{
+	} else {
 		// fmt.Printf("WithFields len:%d\n",len(t.op.Query))
-		str,err := json.Marshal(t.op.Query[0])
-		if err != nil{
-			return "",err
+		str, err := json.Marshal(t.op.Query[0])
+		if err != nil {
+			return "", err
 		}
 		brackets := strings.Index(string(str), "[")
 		if brackets != 0 {
@@ -132,25 +134,25 @@ func (t *Table)Request() (string,error){
 	}
 	if !addedWithFields {
 		var withFields interface{} = []string{}
-		t.op.Query = append([]interface{}{withFields},t.op.Query...)
+		t.op.Query = append([]interface{}{withFields}, t.op.Query...)
 	}
-	strQuery,err := json.Marshal(t.op.Query)
-	if err != nil{
-		return "",err
+	strQuery, err := json.Marshal(t.op.Query)
+	if err != nil {
+		return "", err
 	}
 	// fmt.Printf("Query string:%s\n",string(strQuery))
 
 	data := &TableGetJSON{}
-	nameInDB, err := t.client.GetNameInDB(t.client.Auth.Address, t.name)
+	nameInDB, err := t.client.GetNameInDB(t.client.Auth.Owner, t.name)
 	if err != nil {
-		return "",err
+		return "", err
 	}
 	if t.client.ServerInfo.Updated {
 		data.LedgerIndex = t.client.ServerInfo.LedgerIndex
 	} else {
 		ledgerIndex, err := t.client.GetLedgerVersion()
-		if err != nil{
-			return "",err
+		if err != nil {
+			return "", err
 		}
 		data.LedgerIndex = ledgerIndex
 	}
@@ -158,13 +160,13 @@ func (t *Table)Request() (string,error){
 	data.Raw = string(strQuery)
 	data.Account = t.client.Auth.Address
 	data.Owner = t.client.Auth.Owner
-	return t.client.GetTableData(data,false)
+	return t.client.GetTableData(data, false)
 }
 
 //PrepareTx prepare tx json for submit
 func (t *Table) PrepareTx() (TxJSON, error) {
 	tx := &TableJSON{}
-	seq, nameInDB, err := net.PrepareTable(t.client, t.client.Auth.Address, t.name)
+	seq, nameInDB, err := net.PrepareTable(t.client, t.name)
 	if err != nil {
 		// log.Println(err)
 		return nil, err

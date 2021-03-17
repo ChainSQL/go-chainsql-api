@@ -5,11 +5,11 @@ import (
 	"log"
 	"sync"
 
-	"github.com/buger/jsonparser"
+	"github.com/ChainSQL/go-chainsql-api/cgofuns"
 	"github.com/ChainSQL/go-chainsql-api/export"
 	"github.com/ChainSQL/go-chainsql-api/net"
 	"github.com/ChainSQL/go-chainsql-api/util"
-	"github.com/ChainSQL/go-chainsql-api/cgofuns"
+	"github.com/buger/jsonparser"
 )
 
 // TxJSON is a type indicate a transaction json
@@ -68,7 +68,7 @@ func (s *SubmitBase) doSubmit() *TxResult {
 	}
 
 	jsonStr, err := json.Marshal(tx)
-	log.Printf("Tx json before sign:%s\n",string(jsonStr))
+	// log.Printf("Tx json before sign:%s\n",string(jsonStr))
 	if err != nil {
 		log.Printf("doSubmit error:%s\n", err)
 		return &TxResult{
@@ -88,7 +88,7 @@ func (s *SubmitBase) doSubmit() *TxResult {
 		}
 	}
 
-	log.Printf("Sign Result: hash=%s\n",string(txHash))
+	// log.Printf("Sign Result: hash=%s\n", string(txHash))
 
 	txSigned := &TxSigned{
 		blob: string(signedData),
@@ -136,7 +136,7 @@ func (s *SubmitBase) handleSignedTx(tx *TxSigned) *TxResult {
 		log.Printf("handleSignedTx error:%s\n", err)
 	}
 	if status == "error" {
-		log.Printf("Send tx error:%s\n",response)
+		log.Printf("Send tx error:%s\n", response)
 		errorCode, _ := jsonparser.GetString([]byte(response), "error")
 		errorMessage, _ := jsonparser.GetString([]byte(response), "error_message")
 		return &TxResult{

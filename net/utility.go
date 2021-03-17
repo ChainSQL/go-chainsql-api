@@ -7,7 +7,7 @@ import (
 )
 
 //PrepareTable return the account sequence and table NameInDB
-func PrepareTable(client *Client, address string, name string) (int, string, error) {
+func PrepareTable(client *Client, name string) (int, string, error) {
 	w := new(sync.WaitGroup)
 	w.Add(2)
 	seq := 0
@@ -15,7 +15,7 @@ func PrepareTable(client *Client, address string, name string) (int, string, err
 	err := error(nil)
 	go func() {
 		defer w.Done()
-		info := client.GetAccountInfo(address)
+		info := client.GetAccountInfo(client.Auth.Address)
 		sequence, errTmp := jsonparser.GetInt([]byte(info), "result", "account_data", "Sequence")
 		if errTmp != nil {
 			err = errTmp
@@ -25,7 +25,7 @@ func PrepareTable(client *Client, address string, name string) (int, string, err
 	}()
 	go func() {
 		defer w.Done()
-		nameInDBTmp, errTmp := client.GetNameInDB(address, name)
+		nameInDBTmp, errTmp := client.GetNameInDB(client.Auth.Owner, name)
 		if errTmp != nil {
 			err = errTmp
 			return

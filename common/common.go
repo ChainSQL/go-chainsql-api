@@ -3,11 +3,11 @@ package common
 import "fmt"
 
 //Account define the account format
-type Account struct{
-	Address 		string `json:"address"`
-	PublicKey 		string `json:"publicKey"`
-	PublicKeyHex 	string `json:"publicKeyHex"`
-	PrivateKey 		string `json:"privateKey"`
+type Account struct {
+	Address      string `json:"address"`
+	PublicKey    string `json:"publicKey"`
+	PublicKeyHex string `json:"publicKeyHex"`
+	PrivateKey   string `json:"privateKey"`
 }
 
 // Auth is the type with ws connection infomations
@@ -29,10 +29,10 @@ type TableObj struct {
 }
 
 // TableFields is common table operation fields
-type TableFields struct{
-	Tables          []TableObj
-	Raw             string
-	Account         string
+type TableFields struct {
+	Tables  []TableObj
+	Raw     string
+	Account string
 }
 
 // TableTxFields contains fields that chainsql table transaction needs
@@ -68,7 +68,7 @@ func (r *RequestBase) GetID() int64 {
 // FormatTables create the Tables json array in Chainsql transaction
 func FormatTables(name string, nameInDB string) []TableObj {
 	return []TableObj{
-		TableObj{
+		{
 			Table: TableName{
 				TableName: fmt.Sprintf("%x", name),
 				NameInDB:  nameInDB,
@@ -79,7 +79,7 @@ func FormatTables(name string, nameInDB string) []TableObj {
 
 func FormatTablesForGet(name string, nameInDB string) []TableObj {
 	return []TableObj{
-		TableObj{
+		{
 			Table: TableName{
 				TableName: name,
 				NameInDB:  nameInDB,
