@@ -115,11 +115,16 @@ func (s *SubmitBase) handleSignedTx(tx *TxSigned) *TxResult {
 				ret.Status = status
 				ret.TxHash = tx.hash
 			} else {
-				if s.expect == util.DbSuccess && (status == util.ValidateError ||
-					status == util.ValidateTimeout) {
+				if status == util.ValidateSuccess {
+					return
+				}
+
+				if s.expect == util.DbSuccess {
 					defer wait.Done()
-					ret.Status = status
-					ret.TxHash = tx.hash
+				}
+				ret.Status = status
+				ret.TxHash = tx.hash
+				if status == util.ValidateError {
 					errCode, _ := jsonparser.GetString([]byte(msg), "error")
 					errorMessage, _ := jsonparser.GetString([]byte(msg), "error_message")
 					ret.ErrorCode = errCode
@@ -164,6 +169,7 @@ func (s *SubmitBase) handleSignedTx(tx *TxSigned) *TxResult {
 				wait.Add(2)
 			}
 			wait.Wait()
+			s.client.UnSubscribeTx(tx.hash)
 		}
 	} else {
 		if s.expect != util.SendSuccess {

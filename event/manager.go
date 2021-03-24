@@ -3,9 +3,9 @@ package event
 import (
 	"log"
 
-	"github.com/buger/jsonparser"
 	"github.com/ChainSQL/go-chainsql-api/export"
 	"github.com/ChainSQL/go-chainsql-api/util"
+	"github.com/buger/jsonparser"
 )
 
 // Manager manages the subscription
@@ -20,7 +20,7 @@ func NewEventManager() *Manager {
 	return &Manager{
 		txCache:          make(map[string]export.Callback),
 		tableCache:       make(map[string]export.Callback),
-		ledgerCloseCache: make([]export.Callback, 0,10),
+		ledgerCloseCache: make([]export.Callback, 0, 10),
 	}
 }
 
@@ -58,12 +58,8 @@ func (e *Manager) OnLedgerClosed(msg string) {
 
 // OnSingleTransaction trigger the callback
 func (e *Manager) OnSingleTransaction(msg string) {
+	// log.Println(msg)
 	txid, err := jsonparser.GetString([]byte(msg), "transaction", "hash")
-	if err != nil {
-		log.Printf("OnSingleTransaction error:%s\n", err)
-		return
-	}
-	txType, err := jsonparser.GetString([]byte(msg), "transaction", "TransactionType")
 	if err != nil {
 		log.Printf("OnSingleTransaction error:%s\n", err)
 		return
@@ -71,6 +67,12 @@ func (e *Manager) OnSingleTransaction(msg string) {
 	//trigger callback
 	if cb, ok := e.txCache[txid]; ok {
 		cb(msg)
+	}
+
+	txType, err := jsonparser.GetString([]byte(msg), "transaction", "TransactionType")
+	if err != nil {
+		// log.Printf("OnSingleTransaction error:%s\n", err)
+		return
 	}
 	//remove subscription
 	if util.IsChainsqlType(txType) {

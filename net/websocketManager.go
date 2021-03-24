@@ -49,11 +49,15 @@ func (wsc *WebsocketManager) dail() error {
 func (wsc *WebsocketManager) sendMsgThread() {
 	go func() {
 		for {
-			msg := <-wsc.sendMsgChan
-			err := wsc.conn.WriteMessage(websocket.TextMessage, []byte(msg))
-			if err != nil {
-				log.Println("write:", err)
-				continue
+			if wsc.conn != nil && wsc.isAlive {
+				msg := <-wsc.sendMsgChan
+				err := wsc.conn.WriteMessage(websocket.TextMessage, []byte(msg))
+				if err != nil {
+					defer wsc.conn.Close()
+					log.Println("write:", err)
+					wsc.isAlive = false
+					break
+				}
 			}
 		}
 	}()
@@ -63,9 +67,10 @@ func (wsc *WebsocketManager) sendMsgThread() {
 func (wsc *WebsocketManager) readMsgThread() {
 	go func() {
 		for {
-			if wsc.conn != nil {
+			if wsc.conn != nil && wsc.isAlive {
 				_, message, err := wsc.conn.ReadMessage()
 				if err != nil {
+					defer wsc.conn.Close()
 					log.Println("read:", err)
 					wsc.isAlive = false
 					// 出现错误，退出读取，尝试重连

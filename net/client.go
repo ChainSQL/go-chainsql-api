@@ -2,10 +2,10 @@ package net
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"sync"
-	"errors"
 
 	"github.com/ChainSQL/go-chainsql-api/common"
 	"github.com/ChainSQL/go-chainsql-api/event"
@@ -27,7 +27,7 @@ type Client struct {
 	recvMsgChan chan string
 	requests    map[int64]*Request
 	mutex       *sync.RWMutex
-	Auth		*common.Auth
+	Auth        *common.Auth
 	ServerInfo  *ServerInfo
 	Event       *event.Manager
 }
@@ -38,7 +38,7 @@ func NewClient() *Client {
 		cmdIDs:     0,
 		requests:   make(map[int64]*Request),
 		mutex:      new(sync.RWMutex),
-		Auth:		&common.Auth{},
+		Auth:       &common.Auth{},
 		ServerInfo: NewServerInfo(),
 		Event:      event.NewEventManager(),
 	}
@@ -120,7 +120,9 @@ func (c *Client) onResponse(msg string) {
 		return
 	}
 	defer request.Wait.Done()
+	c.mutex.Lock()
 	delete(c.requests, id)
+	c.mutex.Unlock()
 	request.Response = &Response{
 		Value:   msg,
 		Request: request,
@@ -271,25 +273,25 @@ func (c *Client) UnSubscribeTx(hash string) {
 	c.asyncRequest(req)
 }
 
-func (c *Client) GetTableData(dataJSON interface{},bSql bool) (string,error){
-	type Request struct{
+func (c *Client) GetTableData(dataJSON interface{}, bSql bool) (string, error) {
+	type Request struct {
 		common.RequestBase
-		PublicKey 	string `json:"publicKey"`
-		Signature 	string `json:"signature"`
-		SigningData string `json:"signingData"`
-		TxJSON		interface{} `json:"tx_json"`
+		PublicKey   string      `json:"publicKey"`
+		Signature   string      `json:"signature"`
+		SigningData string      `json:"signingData"`
+		TxJSON      interface{} `json:"tx_json"`
 	}
 	c.cmdIDs++
 	req := &Request{}
 	req.ID = c.cmdIDs
 	req.Command = "r_get"
-	if bSql{
+	if bSql {
 		req.Command = "r_get_sql_user"
 	}
 	req.TxJSON = dataJSON
-	accStr,err := util.GenerateAccount(c.Auth.Secret)
+	accStr, err := util.GenerateAccount(c.Auth.Secret)
 	if err != nil {
-		return "",err
+		return "", err
 	}
 	publicKey, err := jsonparser.GetString([]byte(accStr), "publicKeyHex")
 	if err != nil {
@@ -299,7 +301,7 @@ func (c *Client) GetTableData(dataJSON interface{},bSql bool) (string,error){
 	if err != nil {
 		return "", err
 	}
-	signature,err := util.SignPlainData(c.Auth.Secret, string(jsonStr))
+	signature, err := util.SignPlainData(c.Auth.Secret, string(jsonStr))
 	if err != nil {
 		return "", err
 	}
@@ -310,22 +312,22 @@ func (c *Client) GetTableData(dataJSON interface{},bSql bool) (string,error){
 
 	request := c.syncRequest(req)
 
-	status,err := jsonparser.GetString([]byte(request.Response.Value), "status")
-	if err != nil{
-		return "",err
+	status, err := jsonparser.GetString([]byte(request.Response.Value), "status")
+	if err != nil {
+		return "", err
 	}
-	if status != "success"{
-		errorMsg,_ := jsonparser.GetString([]byte(request.Response.Value), "error_message")
-		return "",errors.New(errorMsg)
+	if status != "success" {
+		errorMsg, _ := jsonparser.GetString([]byte(request.Response.Value), "error_message")
+		return "", errors.New(errorMsg)
 	}
 
-	result,_,_, err := jsonparser.Get([]byte(request.Response.Value), "result")
-	if err != nil{
+	result, _, _, err := jsonparser.Get([]byte(request.Response.Value), "result")
+	if err != nil {
 		// log.Printf("Cleint::GetTableData %s\n",err)
 		return "", err
 	}
 	// log.Printf("type:%T\n",result)
-	return string(result),nil
+	return string(result), nil
 }
 
 func (c *Client) syncRequest(v common.IRequest) *Request {
