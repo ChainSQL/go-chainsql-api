@@ -52,7 +52,7 @@ func (s *ServerInfo) Update(result string) {
 
 //GetFieldInt get value from json
 func (s *ServerInfo) GetFieldInt(result string, field *int, fieldInJSON string) {
-	nValue, err := jsonparser.GetInt([]byte(result), "result", fieldInJSON)
+	nValue, err := jsonparser.GetInt([]byte(result), fieldInJSON)
 	if err == nil {
 		*field = int(nValue)
 	}
@@ -60,7 +60,7 @@ func (s *ServerInfo) GetFieldInt(result string, field *int, fieldInJSON string) 
 
 //GetFieldString get value from json
 func (s *ServerInfo) GetFieldString(result string, field *string, fieldInJSON string) {
-	sValue, err := jsonparser.GetString([]byte(result), "result", fieldInJSON)
+	sValue, err := jsonparser.GetString([]byte(result), fieldInJSON)
 	if err == nil {
 		*field = sValue
 	}
