@@ -74,7 +74,12 @@ func (c *Client) initSubscription() {
 	}
 	request := c.syncRequest(subCmd)
 
-	c.ServerInfo.Update(request.Response.Value)
+	result, _, _, err := jsonparser.Get([]byte(request.Response.Value), "result")
+	if err != nil {
+		fmt.Printf("initSubscription error:%s\n", err)
+		return
+	}
+	c.ServerInfo.Update(string(result))
 }
 
 func (c *Client) processMessage() {
