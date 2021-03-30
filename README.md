@@ -12,7 +12,9 @@
 - 以下方式暂时方式
 - 打开cgofun/cgo.go文件，删除这一行：#cgo linux LDFLAGS: -Wl,-RPATH="./" -L ./clib/linux/ -lsignature -lboost_regex -lcrypto -lssl -ldl -lstdc++
 - 在相应位置增加这一行：#cgo LDFLAGS: -L ./clib/arm/ -lsignature -lboost_regex -lssl -lcrypto -lstdc++ -ldl
+- CGO_ENABLED=1 GOOS=linux GOARCH=arm CC=arm-linux-gnueabihf-gcc go build
 4. aarch64
 - 以下方式暂时方式
 - 打开cgofun/cgo.go文件，删除这一行：#cgo linux LDFLAGS: -Wl,-RPATH="./" -L ./clib/linux/ -lsignature -lboost_regex -lcrypto -lssl -ldl -lstdc++
 - 在相应位置增加这一行：#cgo LDFLAGS: -L ./clib/aarch64/ -lsignature -lboost_regex -lssl -lcrypto -lstdc++ -ldl
+- CGO_ENABLED=1 GOOS=linux GOARCH=arm64 CC=aarch64-linux-gnu-gcc go build main.go
