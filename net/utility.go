@@ -15,7 +15,11 @@ func PrepareTable(client *Client, name string) (int, string, error) {
 	err := error(nil)
 	go func() {
 		defer w.Done()
-		info := client.GetAccountInfo(client.Auth.Address)
+		info, errTmp := client.GetAccountInfo(client.Auth.Address)
+		if errTmp != nil {
+			err = errTmp
+			return
+		}
 		sequence, errTmp := jsonparser.GetInt([]byte(info), "result", "account_data", "Sequence")
 		if errTmp != nil {
 			err = errTmp

@@ -3,6 +3,7 @@ package core
 import (
 	"encoding/json"
 	"log"
+	"strings"
 	"sync"
 
 	"github.com/ChainSQL/go-chainsql-api/cgofuns"
@@ -63,7 +64,7 @@ func (s *SubmitBase) doSubmit() *TxResult {
 		log.Printf("doSubmit error:%s\n", err)
 		return &TxResult{
 			ErrorCode:    "errPrepareTx",
-			ErrorMessage: "Error when PrepareTx",
+			ErrorMessage: err.Error(),
 		}
 	}
 
@@ -103,33 +104,44 @@ func (s *SubmitBase) doSubmit() *TxResult {
 func (s *SubmitBase) handleSignedTx(tx *TxSigned) *TxResult {
 	ret := &TxResult{}
 	wait := new(sync.WaitGroup)
+	countDone := 0
 	if s.expect != util.SendSuccess {
 		// subscribe for result
 		s.client.SubscribeTx(tx.hash, func(msg string) {
+			// log.Println(msg)
 			defer wait.Done()
+			countDone++
 			status, err := jsonparser.GetString([]byte(msg), "status")
 			if err != nil {
 				log.Printf("handleSignedTx error:%s\n", err)
 			}
-			if status == s.expect {
-				ret.Status = status
-				ret.TxHash = tx.hash
-			} else {
-				if status == util.ValidateSuccess {
-					return
-				}
 
-				if s.expect == util.DbSuccess {
-					defer wait.Done()
+			ret.Status = status
+			ret.TxHash = tx.hash
+			doneTwice := false
+			//db_success come before validate_success
+			// validate_success will not come any more
+			if status == s.expect && status == util.DbSuccess && countDone == 1 {
+				doneTwice = true
+			}
+			if status != s.expect {
+				if status != util.ValidateSuccess && status != util.DbSuccess {
+					if status == util.ValidateError {
+						errCode, _ := jsonparser.GetString([]byte(msg), "error")
+						errorMessage, _ := jsonparser.GetString([]byte(msg), "error_message")
+						ret.ErrorCode = errCode
+						ret.ErrorMessage = errorMessage
+					}
+					if s.expect == util.DbSuccess &&
+						(strings.Contains(status, "validate_") ||
+							(strings.Contains(status, "db_") && countDone == 1)) {
+						doneTwice = true
+					}
 				}
-				ret.Status = status
-				ret.TxHash = tx.hash
-				if status == util.ValidateError {
-					errCode, _ := jsonparser.GetString([]byte(msg), "error")
-					errorMessage, _ := jsonparser.GetString([]byte(msg), "error_message")
-					ret.ErrorCode = errCode
-					ret.ErrorMessage = errorMessage
-				}
+			}
+			if doneTwice {
+				defer wait.Done()
+				countDone++
 			}
 		})
 	}

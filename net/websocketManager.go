@@ -2,6 +2,7 @@ package net
 
 import (
 	"log"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -15,6 +16,8 @@ type WebsocketManager struct {
 	recvMsgChan chan string
 	isAlive     bool
 	timeout     int // used for reconnecting
+	muxRead     *sync.Mutex
+	muxWrite    *sync.Mutex
 }
 
 // NewWsClientManager is a constructor
@@ -29,6 +32,8 @@ func NewWsClientManager(url string, timeout int) *WebsocketManager {
 		recvMsgChan: recvChan,
 		isAlive:     false,
 		timeout:     timeout,
+		muxRead:     new(sync.Mutex),
+		muxWrite:    new(sync.Mutex),
 	}
 }
 
@@ -51,7 +56,9 @@ func (wsc *WebsocketManager) sendMsgThread() {
 		for {
 			if wsc.conn != nil && wsc.isAlive {
 				msg := <-wsc.sendMsgChan
+				wsc.muxWrite.Lock()
 				err := wsc.conn.WriteMessage(websocket.TextMessage, []byte(msg))
+				wsc.muxWrite.Unlock()
 				if err != nil {
 					defer wsc.conn.Close()
 					log.Println("write:", err)
@@ -68,7 +75,9 @@ func (wsc *WebsocketManager) readMsgThread() {
 	go func() {
 		for {
 			if wsc.conn != nil && wsc.isAlive {
+				wsc.muxRead.Lock()
 				_, message, err := wsc.conn.ReadMessage()
+				wsc.muxRead.Unlock()
 				if err != nil {
 					defer wsc.conn.Close()
 					log.Println("read:", err)
@@ -89,6 +98,7 @@ func (wsc *WebsocketManager) checkReconnect() {
 	go func() {
 		for {
 			if wsc.isAlive == false {
+				log.Println("checkReconnect ws disconnected,reconnect!")
 				wsc.dail()
 				wsc.sendMsgThread()
 				wsc.readMsgThread()

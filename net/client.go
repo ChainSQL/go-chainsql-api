@@ -187,7 +187,7 @@ func (c *Client) GetLedgerVersion() (int, error) {
 }
 
 // GetAccountInfo request for account_info
-func (c *Client) GetAccountInfo(address string) string {
+func (c *Client) GetAccountInfo(address string) (string, error) {
 	type getAccount struct {
 		common.RequestBase
 		Account string `json:"account"`
@@ -200,7 +200,15 @@ func (c *Client) GetAccountInfo(address string) string {
 
 	request := c.syncRequest(accountReq)
 
-	return request.Response.Value
+	status, err := jsonparser.GetString([]byte(request.Response.Value), "status")
+	if err != nil {
+		return "", err
+	}
+	if status == "error" {
+		errMsg, _ := jsonparser.GetString([]byte(request.Response.Value), "error_message")
+		return "", fmt.Errorf("%s", errMsg)
+	}
+	return request.Response.Value, nil
 }
 
 // GetNameInDB request for table nameInDB
@@ -223,8 +231,8 @@ func (c *Client) GetNameInDB(address string, tableName string) (string, error) {
 		return "", err
 	}
 	if status == "error" {
-		errCode, _ := jsonparser.GetString([]byte(request.Response.Value), "error")
-		return "", fmt.Errorf("%s", errCode)
+		errMsg, _ := jsonparser.GetString([]byte(request.Response.Value), "error_message")
+		return "", fmt.Errorf("%s", errMsg)
 	}
 	nameInDB, err := jsonparser.GetString([]byte(request.Response.Value), "result", "nameInDB")
 	if err != nil {
