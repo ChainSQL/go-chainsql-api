@@ -57,7 +57,7 @@ func (s *ServerInfo) GetFieldInt(result string, field *int, fieldInJSON string) 
 	nValue, err := jsonparser.GetInt([]byte(result), fieldInJSON)
 	if err == nil {
 		*field = int(nValue)
-	} else {
+	} else if fieldInJSON == "ledger_index" {
 		log.Printf("GetFieldInt error for field %s:%s\n", fieldInJSON, result)
 	}
 }
