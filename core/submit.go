@@ -99,21 +99,35 @@ func (s *SubmitBase) doSubmit() *TxResult {
 	return s.handleSignedTx(txSigned)
 }
 
+func (s *SubmitBase) checkWaitGroupDone(wait *sync.WaitGroup, countDone *int, maxDone int) bool {
+	if *countDone < maxDone {
+		defer wait.Done()
+		(*countDone)++
+		return true
+	} else {
+		return false
+	}
+}
+
 // handleSignedTx handles signed transaction submit
 // Chainsql will re-use this function when commit called
 func (s *SubmitBase) handleSignedTx(tx *TxSigned) *TxResult {
 	ret := &TxResult{}
 	wait := new(sync.WaitGroup)
 	countDone := 0
+	maxDone := 0
 	if s.expect != util.SendSuccess {
 		// subscribe for result
 		s.client.SubscribeTx(tx.hash, func(msg string) {
 			// log.Println(msg)
-			defer wait.Done()
-			countDone++
+			if !s.checkWaitGroupDone(wait, &countDone, maxDone) {
+				// log.Printf("Already %d times of wait.Done,msg=%s \n", countDone, msg)
+				return
+			}
 			status, err := jsonparser.GetString([]byte(msg), "status")
 			if err != nil {
 				log.Printf("handleSignedTx error:%s\n", err)
+				return
 			}
 
 			ret.Status = status
@@ -140,8 +154,10 @@ func (s *SubmitBase) handleSignedTx(tx *TxSigned) *TxResult {
 				}
 			}
 			if doneTwice {
-				defer wait.Done()
-				countDone++
+				if !s.checkWaitGroupDone(wait, &countDone, maxDone) {
+					// log.Printf("Already %d times of wait.Done,msg=%s \n", countDone, msg)
+					return
+				}
 			}
 		})
 	}
@@ -177,8 +193,10 @@ func (s *SubmitBase) handleSignedTx(tx *TxSigned) *TxResult {
 			//waiting for subscribe result
 			if s.expect == util.ValidateSuccess {
 				wait.Add(1)
+				maxDone = 1
 			} else {
 				wait.Add(2)
+				maxDone = 2
 			}
 			wait.Wait()
 			s.client.UnSubscribeTx(tx.hash)
