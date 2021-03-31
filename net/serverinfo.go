@@ -58,7 +58,7 @@ func (s *ServerInfo) GetFieldInt(result string, field *int, fieldInJSON string) 
 	if err == nil {
 		*field = int(nValue)
 	} else {
-		log.Printf("GetFieldInt error for field %s:%s\n", fieldInJSON, err.Error())
+		log.Printf("GetFieldInt error for field %s:%s\n", fieldInJSON, result)
 	}
 }
 
@@ -68,7 +68,7 @@ func (s *ServerInfo) GetFieldString(result string, field *string, fieldInJSON st
 	if err == nil {
 		*field = sValue
 	} else {
-		log.Printf("GetFieldString error for field %s:%s\n", fieldInJSON, err.Error())
+		log.Printf("GetFieldString error for field %s:%s\n", fieldInJSON, result)
 	}
 }
 

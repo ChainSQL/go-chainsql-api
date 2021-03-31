@@ -2,6 +2,7 @@ package event
 
 import (
 	"log"
+	"sync"
 
 	"github.com/ChainSQL/go-chainsql-api/export"
 	"github.com/ChainSQL/go-chainsql-api/util"
@@ -13,6 +14,8 @@ type Manager struct {
 	txCache          map[string]export.Callback
 	tableCache       map[string]export.Callback
 	ledgerCloseCache []export.Callback
+	muxTx            *sync.Mutex
+	muxTable         *sync.Mutex
 }
 
 // NewEventManager is constructor for EventManager
@@ -21,27 +24,37 @@ func NewEventManager() *Manager {
 		txCache:          make(map[string]export.Callback),
 		tableCache:       make(map[string]export.Callback),
 		ledgerCloseCache: make([]export.Callback, 0, 10),
+		muxTx:            new(sync.Mutex),
+		muxTable:         new(sync.Mutex),
 	}
 }
 
 // SubscribeTable subscribe a table and set a callback function
 func (e *Manager) SubscribeTable(name string, owner string, callback export.Callback) {
+	e.muxTable.Lock()
 	e.tableCache[name+owner] = callback
+	e.muxTable.Unlock()
 }
 
 // UnSubscribeTable cancel the subscription
 func (e *Manager) UnSubscribeTable(name string, owner string) {
+	e.muxTable.Lock()
 	delete(e.tableCache, name+owner)
+	e.muxTable.Unlock()
 }
 
 //SubscribeTx subscribe a transaction
 func (e *Manager) SubscribeTx(hash string, callback export.Callback) {
+	e.muxTx.Lock()
 	e.txCache[hash] = callback
+	e.muxTx.Unlock()
 }
 
 //UnSubscribeTx unsubscribe a transaction
 func (e *Manager) UnSubscribeTx(hash string) {
+	e.muxTx.Lock()
 	delete(e.txCache, hash)
+	e.muxTx.Unlock()
 }
 
 // SubscribeLedger subscribe ledgerClosed
@@ -64,10 +77,13 @@ func (e *Manager) OnSingleTransaction(msg string) {
 		log.Printf("OnSingleTransaction error:%s\n", err)
 		return
 	}
+
 	//trigger callback
+	e.muxTx.Lock()
 	if cb, ok := e.txCache[txid]; ok {
 		cb(msg)
 	}
+	e.muxTx.Unlock()
 
 	txType, err := jsonparser.GetString([]byte(msg), "transaction", "TransactionType")
 	if err != nil {
@@ -82,10 +98,10 @@ func (e *Manager) OnSingleTransaction(msg string) {
 			return
 		}
 		if util.ValidateSuccess != status {
-			delete(e.txCache, txid)
+			e.UnSubscribeTx(txid)
 		}
 	} else {
-		delete(e.txCache, txid)
+		e.UnSubscribeTx(txid)
 	}
 }
 
