@@ -1,6 +1,8 @@
 package net
 
 import (
+	"log"
+
 	"github.com/buger/jsonparser"
 )
 
@@ -55,6 +57,8 @@ func (s *ServerInfo) GetFieldInt(result string, field *int, fieldInJSON string) 
 	nValue, err := jsonparser.GetInt([]byte(result), fieldInJSON)
 	if err == nil {
 		*field = int(nValue)
+	} else {
+		log.Printf("GetFieldInt error for field %s:%s\n", fieldInJSON, err.Error())
 	}
 }
 
@@ -63,6 +67,8 @@ func (s *ServerInfo) GetFieldString(result string, field *string, fieldInJSON st
 	sValue, err := jsonparser.GetString([]byte(result), fieldInJSON)
 	if err == nil {
 		*field = sValue
+	} else {
+		log.Printf("GetFieldString error for field %s:%s\n", fieldInJSON, err.Error())
 	}
 }
 
