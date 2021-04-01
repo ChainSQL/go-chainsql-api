@@ -17,9 +17,9 @@ type ServerInfo struct {
 	TxnSuccess   int
 	TxnFailure   int
 	TxnCount     int
-	Ledgerhash   string
-	ServerStatus string
-	Updated      bool
+	// Ledgerhash   string
+	// ServerStatus string
+	Updated bool
 }
 
 //NewServerInfo is constructor
@@ -46,8 +46,8 @@ func (s *ServerInfo) Update(result string) {
 	s.GetFieldInt(result, &s.TxnSuccess, "txn_success")
 	s.GetFieldInt(result, &s.TxnFailure, "txn_failure")
 	s.GetFieldInt(result, &s.TxnCount, "txn_count")
-	s.GetFieldString(result, &s.Ledgerhash, "ledger_hash")
-	s.GetFieldString(result, &s.ServerStatus, "server_status")
+	// s.GetFieldString(result, &s.Ledgerhash, "ledger_hash")
+	// s.GetFieldString(result, &s.ServerStatus, "server_status")
 
 	s.Updated = true
 }

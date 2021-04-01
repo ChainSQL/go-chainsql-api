@@ -43,6 +43,7 @@ func (wsc *WebsocketManager) dail() error {
 	// log.Printf("connecting to %s", wsc.url)
 	wsc.conn, _, err = websocket.DefaultDialer.Dial(wsc.url, nil)
 	if err != nil {
+		log.Printf("connecting to %s failed,err:%s", wsc.url, err.Error())
 		return err
 	}
 	wsc.isAlive = true
@@ -63,6 +64,7 @@ func (wsc *WebsocketManager) sendMsgThread() {
 					defer wsc.conn.Close()
 					log.Println("write:", err)
 					wsc.isAlive = false
+					wsc.sendMsgChan <- msg
 					break
 				}
 			}
@@ -99,9 +101,7 @@ func (wsc *WebsocketManager) checkReconnect() {
 		for {
 			if wsc.isAlive == false {
 				log.Println("checkReconnect ws disconnected,reconnect!")
-				wsc.dail()
-				wsc.sendMsgThread()
-				wsc.readMsgThread()
+				wsc.connectAndRun()
 			}
 			time.Sleep(time.Second * time.Duration(wsc.timeout))
 		}
@@ -110,10 +110,17 @@ func (wsc *WebsocketManager) checkReconnect() {
 
 //Start 开启服务并重连
 func (wsc *WebsocketManager) Start() error {
-	err := wsc.dail()
-	wsc.sendMsgThread()
-	wsc.readMsgThread()
+	err := wsc.connectAndRun()
 	wsc.checkReconnect()
+	return err
+}
+
+func (wsc *WebsocketManager) connectAndRun() error {
+	err := wsc.dail()
+	if err == nil {
+		wsc.sendMsgThread()
+		wsc.readMsgThread()
+	}
 	return err
 }
 
