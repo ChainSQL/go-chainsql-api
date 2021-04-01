@@ -55,8 +55,15 @@ func (c *Client) Connect(url string) error {
 	c.recvMsgChan = c.wm.ReadChan()
 
 	go c.processMessage()
+	go c.checkReconnection()
 	c.initSubscription()
 	return nil
+}
+
+func (c *Client) checkReconnection() {
+	c.wm.OnReconnected(func() {
+		c.initSubscription()
+	})
 }
 
 func (c *Client) initSubscription() {
