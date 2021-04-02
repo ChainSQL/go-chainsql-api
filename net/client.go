@@ -126,15 +126,18 @@ func (c *Client) onResponse(msg string) {
 		// fmt.Println(err)
 		return
 	}
+
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
 	request, ok := c.requests[id]
 	if !ok {
 		log.Printf("onResponse:Request with id %d not exist\n", id)
 		return
 	}
+
 	defer request.Wait.Done()
-	c.mutex.Lock()
 	delete(c.requests, id)
-	c.mutex.Unlock()
+
 	request.Response = &Response{
 		Value:   msg,
 		Request: request,
