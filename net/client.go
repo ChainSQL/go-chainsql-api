@@ -66,6 +66,10 @@ func (c *Client) checkReconnection() {
 	})
 }
 
+func (c *Client) GetWebocketManager() *WebsocketManager {
+	return c.wm
+}
+
 func (c *Client) initSubscription() {
 	type Subscribe struct {
 		common.RequestBase
