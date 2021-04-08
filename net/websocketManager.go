@@ -65,7 +65,7 @@ func (wsc *WebsocketManager) sendMsgThread() {
 
 				if wsc.conn != nil {
 					wsc.muxWrite.Lock()
-					wsc.conn.SetWriteDeadline(time.Now().Add(time.Duration(wsc.timeout)))
+					// wsc.conn.SetWriteDeadline(time.Now().Add(time.Duration(wsc.timeout)))
 					err := wsc.conn.WriteMessage(websocket.TextMessage, []byte(msg))
 					wsc.muxWrite.Unlock()
 					if err != nil {
