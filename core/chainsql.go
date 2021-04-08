@@ -9,8 +9,6 @@ import (
 	"github.com/ChainSQL/go-chainsql-api/util"
 )
 
-
-
 // Chainsql is the interface struct for this package
 type Chainsql struct {
 	client *net.Client
@@ -24,10 +22,9 @@ type TableListSetJSON struct {
 	AutoFillField string
 }
 
-
-type TableGetSqlJSON struct{
-	Account 	string
-	Sql 		string
+type TableGetSqlJSON struct {
+	Account     string
+	Sql         string
 	LedgerIndex int
 }
 
@@ -91,38 +88,42 @@ func (c *Chainsql) OnLedgerClosed(callback export.Callback) {
 //		"publicKeyHex":"02EA30B2A25844D4AFBAF6020DA9C9FED573AA0058791BFC8642E69888693CF8EA",
 //		"privateKey":"xniMQKhxZTMbfWb8scjRPXa5Zv6HB",
 // }
-func (c *Chainsql) GenerateAccount(args ...string) (string,error) {
-	if len(args) == 0{
+func (c *Chainsql) GenerateAccount(args ...string) (string, error) {
+	if len(args) == 0 {
 		return util.GenerateAccount()
-	}else{
+	} else {
 		return util.GenerateAccount(args[0])
-	}	
+	}
 }
 
 //SignPlainData sign a plain text and return the signature
-func (c *Chainsql) SignPlainData(privateKey string,data string) (string,error){
-	return util.SignPlainData(privateKey,data)
+func (c *Chainsql) SignPlainData(privateKey string, data string) (string, error) {
+	return util.SignPlainData(privateKey, data)
 }
 
 //GetNameInDB request for table nameInDB
-func (c *Chainsql) GetNameInDB(address string, tableName string) (string, error){
-	return c.client.GetNameInDB(address,tableName)
+func (c *Chainsql) GetNameInDB(address string, tableName string) (string, error) {
+	return c.client.GetNameInDB(address, tableName)
 }
 
 //GetBySqlUser is used to select from database by sql
-func (c *Chainsql) GetBySqlUser(sql string) (string,error){
+func (c *Chainsql) GetBySqlUser(sql string) (string, error) {
 	data := &TableGetSqlJSON{
-		Account : c.client.Auth.Address,
-		Sql: sql,
+		Account: c.client.Auth.Address,
+		Sql:     sql,
 	}
 	if c.client.ServerInfo.Updated {
 		data.LedgerIndex = c.client.ServerInfo.LedgerIndex
 	} else {
 		ledgerIndex, err := c.client.GetLedgerVersion()
-		if err != nil{
-			return "",err
+		if err != nil {
+			return "", err
 		}
 		data.LedgerIndex = ledgerIndex
 	}
-	return c.client.GetTableData(data,true)
+	return c.client.GetTableData(data, true)
+}
+
+func (c *Chainsql) IsConnected() bool {
+	return c.client.GetWebocketManager().IsConnected()
 }
