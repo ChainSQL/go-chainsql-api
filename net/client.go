@@ -2,10 +2,10 @@ package net
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/ChainSQL/go-chainsql-api/common"
 	"github.com/ChainSQL/go-chainsql-api/event"
@@ -192,12 +192,28 @@ func (c *Client) GetLedgerVersion() (int, error) {
 		},
 	}
 	request := c.syncRequest(ledgerReq)
-
+	err := c.parseResponseError(request)
+	if err != nil {
+		log.Println("GetLedgerVersion:", err)
+		return 0, err
+	}
 	ledgerIndex, err := jsonparser.GetInt([]byte(request.Response.Value), "result", "ledger_current_index")
 	if err != nil {
 		return 0, err
 	}
 	return int(ledgerIndex), nil
+}
+
+func (c *Client) parseResponseError(request *Request) error {
+	status, err := jsonparser.GetString([]byte(request.Response.Value), "status")
+	if err != nil {
+		return err
+	}
+	if status == "error" {
+		errMsg, _ := jsonparser.GetString([]byte(request.Response.Value), "error_message")
+		return fmt.Errorf("%s", errMsg)
+	}
+	return nil
 }
 
 // GetAccountInfo request for account_info
@@ -214,14 +230,11 @@ func (c *Client) GetAccountInfo(address string) (string, error) {
 
 	request := c.syncRequest(accountReq)
 
-	status, err := jsonparser.GetString([]byte(request.Response.Value), "status")
+	err := c.parseResponseError(request)
 	if err != nil {
 		return "", err
 	}
-	if status == "error" {
-		errMsg, _ := jsonparser.GetString([]byte(request.Response.Value), "error_message")
-		return "", fmt.Errorf("%s", errMsg)
-	}
+
 	return request.Response.Value, nil
 }
 
@@ -240,13 +253,10 @@ func (c *Client) GetNameInDB(address string, tableName string) (string, error) {
 	req.TableName = tableName
 
 	request := c.syncRequest(req)
-	status, err := jsonparser.GetString([]byte(request.Response.Value), "status")
+
+	err := c.parseResponseError(request)
 	if err != nil {
 		return "", err
-	}
-	if status == "error" {
-		errMsg, _ := jsonparser.GetString([]byte(request.Response.Value), "error_message")
-		return "", fmt.Errorf("%s", errMsg)
 	}
 	nameInDB, err := jsonparser.GetString([]byte(request.Response.Value), "result", "nameInDB")
 	if err != nil {
@@ -339,13 +349,9 @@ func (c *Client) GetTableData(dataJSON interface{}, bSql bool) (string, error) {
 
 	request := c.syncRequest(req)
 
-	status, err := jsonparser.GetString([]byte(request.Response.Value), "status")
+	err = c.parseResponseError(request)
 	if err != nil {
 		return "", err
-	}
-	if status != "success" {
-		errorMsg, _ := jsonparser.GetString([]byte(request.Response.Value), "error_message")
-		return "", errors.New(errorMsg)
 	}
 
 	result, _, _, err := jsonparser.Get([]byte(request.Response.Value), "result")
@@ -362,7 +368,25 @@ func (c *Client) syncRequest(v common.IRequest) *Request {
 	request := NewRequest(v.GetID(), string(data))
 	request.Wait.Add(1)
 	c.sendRequest(request)
-	request.Wait.Wait()
+	done := make(chan struct{})
+	go func() {
+		request.Wait.Wait()
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(util.REQUEST_TIMEOUT * time.Second):
+		{
+			timeOutMsg := string(`{
+				"status":"error",
+				"error_message":"request timeout"
+			}`)
+			request.Response = &Response{
+				Value:   timeOutMsg,
+				Request: request,
+			}
+		}
+	}
 	return request
 }
 

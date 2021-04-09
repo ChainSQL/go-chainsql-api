@@ -26,3 +26,8 @@ const (
 	ValidateError   = "validate_error"
 	ValidateTimeout = "validate_timeout"
 )
+
+const (
+	REQUEST_TIMEOUT = 5
+	DIAL_TIMEOUT    = 10
+)

@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ChainSQL/go-chainsql-api/util"
 	"github.com/gorilla/websocket"
 )
 
@@ -45,7 +46,7 @@ func NewWsClientManager(url string, timeout int) *WebsocketManager {
 func (wsc *WebsocketManager) dail() error {
 	var err error
 	// log.Printf("connecting to %s", wsc.url)
-	websocket.DefaultDialer.HandshakeTimeout = 10 * time.Second
+	websocket.DefaultDialer.HandshakeTimeout = util.DIAL_TIMEOUT * time.Second
 	wsc.conn, _, err = websocket.DefaultDialer.Dial(wsc.url, nil)
 	if err != nil {
 		log.Printf("connecting to %s failed,err:%s", wsc.url, err.Error())
