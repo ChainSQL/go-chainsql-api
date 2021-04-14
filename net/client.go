@@ -46,6 +46,10 @@ func NewClient() *Client {
 
 //Connect is used to create a websocket connection
 func (c *Client) Connect(url string) error {
+	if c.wm != nil {
+		return c.reConnect(url)
+	}
+
 	c.wm = NewWsClientManager(url, ReconnectInterval)
 	err := c.wm.Start()
 	if err != nil {
@@ -58,6 +62,15 @@ func (c *Client) Connect(url string) error {
 	go c.checkReconnection()
 	c.initSubscription()
 	return nil
+}
+
+func (c *Client) reConnect(url string) error {
+	err := c.wm.Disconnect()
+	if err != nil {
+		return err
+	}
+	c.wm.SetUrl(url)
+	return c.wm.Start()
 }
 
 func (c *Client) checkReconnection() {

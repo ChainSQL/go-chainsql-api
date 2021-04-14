@@ -21,7 +21,9 @@ type WebsocketManager struct {
 	timeout       int // used for reconnecting
 	muxRead       *sync.Mutex
 	muxWrite      *sync.Mutex
+	muxConnect    *sync.Mutex
 	onReconnected Reconnected
+	first_connect bool
 }
 
 // NewWsClientManager is a constructor
@@ -38,14 +40,16 @@ func NewWsClientManager(url string, timeout int) *WebsocketManager {
 		timeout:       timeout,
 		muxRead:       new(sync.Mutex),
 		muxWrite:      new(sync.Mutex),
+		muxConnect:    new(sync.Mutex),
 		onReconnected: nil,
+		first_connect: true,
 	}
 }
 
 // 链接服务端
 func (wsc *WebsocketManager) dail() error {
 	var err error
-	// log.Printf("connecting to %s", wsc.url)
+	log.Printf("connecting to %s", wsc.url)
 	websocket.DefaultDialer.HandshakeTimeout = util.DIAL_TIMEOUT * time.Second
 	wsc.conn, _, err = websocket.DefaultDialer.Dial(wsc.url, nil)
 	if err != nil {
@@ -55,6 +59,28 @@ func (wsc *WebsocketManager) dail() error {
 	wsc.isAlive = true
 	log.Printf("connecting to %s success!", wsc.url)
 	return nil
+}
+
+func (wsc *WebsocketManager) Disconnect() error {
+	wsc.muxWrite.Lock()
+	wsc.muxConnect.Lock()
+
+	if wsc.conn != nil {
+		err := wsc.conn.Close()
+		if err != nil {
+			return err
+		}
+	}
+
+	wsc.isAlive = false
+
+	wsc.muxConnect.Unlock()
+	wsc.muxWrite.Unlock()
+	return nil
+}
+
+func (wsc *WebsocketManager) SetUrl(url string) {
+	wsc.url = url
 }
 
 // 发送消息
@@ -121,9 +147,11 @@ func (wsc *WebsocketManager) close() {
 func (wsc *WebsocketManager) checkReconnect() {
 	go func() {
 		for {
-			if wsc.isAlive == false {
+			if !wsc.isAlive {
 				log.Println("checkReconnect ws disconnected,reconnect!")
+				wsc.muxConnect.Lock()
 				err := wsc.connectAndRun()
+				wsc.muxConnect.Unlock()
 				if err == nil && wsc.onReconnected != nil {
 					wsc.onReconnected()
 				}
@@ -136,15 +164,16 @@ func (wsc *WebsocketManager) checkReconnect() {
 //Start 开启服务并重连
 func (wsc *WebsocketManager) Start() error {
 	err := wsc.connectAndRun()
-	wsc.checkReconnect()
 	return err
 }
 
 func (wsc *WebsocketManager) connectAndRun() error {
 	err := wsc.dail()
-	if err == nil {
+	if err == nil && wsc.first_connect {
 		wsc.sendMsgThread()
 		wsc.readMsgThread()
+		wsc.checkReconnect()
+		wsc.first_connect = false
 	}
 	return err
 }
