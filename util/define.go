@@ -29,5 +29,5 @@ const (
 
 const (
 	REQUEST_TIMEOUT = 5
-	DIAL_TIMEOUT    = 10
+	DIAL_TIMEOUT    = 2
 )
