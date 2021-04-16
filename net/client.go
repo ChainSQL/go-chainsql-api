@@ -30,6 +30,7 @@ type Client struct {
 	Auth        *common.Auth
 	ServerInfo  *ServerInfo
 	Event       *event.Manager
+	inited      bool
 }
 
 //NewClient is constructor
@@ -41,6 +42,7 @@ func NewClient() *Client {
 		Auth:       &common.Auth{},
 		ServerInfo: NewServerInfo(),
 		Event:      event.NewEventManager(),
+		inited:     false,
 	}
 }
 
@@ -55,12 +57,8 @@ func (c *Client) Connect(url string) error {
 	if err != nil {
 		return err
 	}
-	c.sendMsgChan = c.wm.WriteChan()
-	c.recvMsgChan = c.wm.ReadChan()
 
-	go c.processMessage()
-	go c.checkReconnection()
-	c.initSubscription()
+	c.init()
 	return nil
 }
 
@@ -70,7 +68,24 @@ func (c *Client) reConnect(url string) error {
 		return err
 	}
 	c.wm.SetUrl(url)
-	return c.wm.Start()
+	err = c.wm.Start()
+	if err != nil {
+		return err
+	}
+	if !c.inited {
+		c.init()
+	}
+	return nil
+}
+
+func (c *Client) init() {
+	c.sendMsgChan = c.wm.WriteChan()
+	c.recvMsgChan = c.wm.ReadChan()
+
+	go c.processMessage()
+	go c.checkReconnection()
+	c.initSubscription()
+	c.inited = true
 }
 
 func (c *Client) checkReconnection() {
