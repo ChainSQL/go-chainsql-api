@@ -99,6 +99,7 @@ func (wsc *WebsocketManager) sendMsgThread() {
 						wsc.close()
 						log.Println("write:", err)
 						wsc.sendMsgChan <- msg
+						wsc.isAlive = false
 						// break
 					}
 				}
@@ -124,6 +125,7 @@ func (wsc *WebsocketManager) readMsgThread() {
 				if err != nil {
 					wsc.close()
 					log.Println("read:", err)
+					wsc.isAlive = false
 					// break
 				} else {
 					// log.Printf("recv: %s", message)

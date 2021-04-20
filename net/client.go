@@ -379,6 +379,9 @@ func (c *Client) GetTableData(dataJSON interface{}, bSql bool) (string, error) {
 
 	err = c.parseResponseError(request)
 	if err != nil {
+		if err.Error() == "Invalid field 'LedgerIndex'." {
+			c.ServerInfo.Updated = false
+		}
 		return "", err
 	}
 
