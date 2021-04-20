@@ -74,6 +74,9 @@ func (c *Client) reConnect(url string) error {
 	}
 	if !c.inited {
 		c.init()
+	} else {
+		//connect changed,only subscribe
+		c.initSubscription()
 	}
 	return nil
 }
