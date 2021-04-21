@@ -70,6 +70,7 @@ func (wsc *WebsocketManager) Disconnect() error {
 		if err != nil {
 			return err
 		}
+		wsc.conn = nil
 	}
 
 	wsc.isAlive = false

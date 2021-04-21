@@ -125,5 +125,14 @@ func (c *Chainsql) GetBySqlUser(sql string) (string, error) {
 }
 
 func (c *Chainsql) IsConnected() bool {
-	return c.client.GetWebocketManager().IsConnected()
+	if c.client.GetWebocketManager() != nil {
+		return c.client.GetWebocketManager().IsConnected()
+	}
+	return false
+}
+
+func (c *Chainsql) Disconnect() {
+	if c.client.GetWebocketManager() != nil {
+		c.client.GetWebocketManager().Disconnect()
+	}
 }
