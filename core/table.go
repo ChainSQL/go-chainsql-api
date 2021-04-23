@@ -3,11 +3,9 @@ package core
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"strconv"
 	"strings"
 
-	"github.com/ChainSQL/go-chainsql-api/common"
+	. "github.com/ChainSQL/go-chainsql-api/data"
 	"github.com/ChainSQL/go-chainsql-api/net"
 	"github.com/ChainSQL/go-chainsql-api/util"
 )
@@ -15,20 +13,14 @@ import (
 //OpInfo is the opearting details
 type OpInfo struct {
 	Raw   string
-	Exec  int16
+	Exec  uint16
 	Query []interface{}
 }
 
-//TableJSON specifies the table operation format
-type TableJSON struct {
-	common.TableTxFields
-	common.NetFields
-	Owner         string
-	AutoFillField string `json:"AutoFillField,omitempty"`
-}
-
 type TableGetJSON struct {
-	common.TableFields
+	Tables      []TableObjForGet
+	Raw         string `json:"Raw,omitempty"`
+	Account     string
 	Owner       string
 	LedgerIndex int
 }
@@ -156,7 +148,7 @@ func (t *Table) Request() (string, error) {
 		}
 		data.LedgerIndex = ledgerIndex
 	}
-	data.Tables = common.FormatTablesForGet(t.name, nameInDB)
+	data.Tables = FormatTablesForGet(t.name, nameInDB)
 	data.Raw = string(strQuery)
 	data.Account = t.client.Auth.Address
 	data.Owner = t.client.Auth.Owner
@@ -164,37 +156,52 @@ func (t *Table) Request() (string, error) {
 }
 
 //PrepareTx prepare tx json for submit
-func (t *Table) PrepareTx() (TxJSON, error) {
-	tx := &TableJSON{}
+func (t *Table) PrepareTx() (Signer, error) {
+	tx := &SQLStatement{}
 	seq, nameInDB, err := net.PrepareTable(t.client, t.name)
 	if err != nil {
 		// log.Println(err)
 		return nil, err
 	}
-
-	tx.TransactionType = util.SQLStatement
-	tx.Tables = common.FormatTables(t.name, nameInDB)
+	account, err := NewAccountFromAddress(t.client.Auth.Address)
+	if err != nil {
+		// log.Println(err)
+		return nil, err
+	}
+	owner, err := NewAccountFromAddress(t.client.Auth.Owner)
+	if err != nil {
+		// log.Println(err)
+		return nil, err
+	}
+	var valRaw = VariableLength(t.op.Raw) //fmt.Sprintf("%x", t.op.Raw)
+	tx.TransactionType = SQLSTATEMENT
+	tx.Tables = FormatTables(t.name, nameInDB)
 	tx.OpType = t.op.Exec
-	tx.Raw = fmt.Sprintf("%x", t.op.Raw)
-	tx.Account = t.client.Auth.Address
-	tx.Owner = t.client.Auth.Owner
+	tx.Raw = &valRaw
+	tx.Account = *account
+	tx.Owner = *owner
 	tx.Sequence = seq
-	fee := 10
+	var fee int64 = 10
 	if t.client.ServerInfo.Updated {
-		tx.LastLedgerSequence = t.client.ServerInfo.LedgerIndex + 20
-		fee = t.client.ServerInfo.ComputeFee()
+		last := uint32(t.client.ServerInfo.LedgerIndex + 20)
+		tx.LastLedgerSequence = &last
+		fee = int64(t.client.ServerInfo.ComputeFee())
 	} else {
 		ledgerIndex, err := t.client.GetLedgerVersion()
 		if err != nil {
 			return nil, err
 		}
-		tx.LastLedgerSequence = ledgerIndex + 20
+		last := uint32(ledgerIndex + 20)
+		tx.LastLedgerSequence = &last
 
 		fee = 50
 	}
 
 	fee += util.GetExtraFee(t.op.Raw, t.client.ServerInfo.DropsPerByte)
-	tx.Fee = strconv.Itoa(fee)
-
+	finalFee, err := NewNativeValue(fee)
+	if err != nil {
+		return nil, err
+	}
+	tx.Fee = *finalFee
 	return tx, nil
 }

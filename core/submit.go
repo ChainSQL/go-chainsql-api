@@ -2,11 +2,13 @@ package core
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"strings"
 	"sync"
 
-	"github.com/ChainSQL/go-chainsql-api/cgofuns"
+	"github.com/ChainSQL/go-chainsql-api/crypto"
+	. "github.com/ChainSQL/go-chainsql-api/data"
 	"github.com/ChainSQL/go-chainsql-api/export"
 	"github.com/ChainSQL/go-chainsql-api/net"
 	"github.com/ChainSQL/go-chainsql-api/util"
@@ -33,7 +35,7 @@ type TxResult struct {
 
 // IPrepare is an interface that a struct call submit() method must implment
 type IPrepare interface {
-	PrepareTx() (TxJSON, error)
+	PrepareTx() (Signer, error)
 }
 
 // SubmitBase base struct
@@ -67,34 +69,45 @@ func (s *SubmitBase) doSubmit() *TxResult {
 			ErrorMessage: err.Error(),
 		}
 	}
+	// str, err := json.Marshal(tx)
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+	// log.Println(string(str))
 
-	jsonStr, err := json.Marshal(tx)
-	// log.Printf("Tx json before sign:%s\n",string(jsonStr))
+	key, err := KeyFromSecret(s.client.Auth.Secret)
 	if err != nil {
 		log.Printf("doSubmit error:%s\n", err)
 		return &TxResult{
-			ErrorCode:    "errJsonMarshal",
-			ErrorMessage: "Error when json.Marshal",
+			ErrorCode:    "errGenerateKey",
+			ErrorMessage: err.Error(),
 		}
 	}
-
-	o := new(cgofuns.CGOFun)
-	var signedData []byte
-	var txHash []byte
-	signed := o.SignTransaction(s.client.Auth.Secret, string(jsonStr), &signedData, &txHash)
-	if !signed {
+	sequenceZero := uint32(0)
+	err = Sign(tx, key, &sequenceZero)
+	if err != nil {
+		log.Printf("doSubmit error:%s\n", err)
 		return &TxResult{
 			ErrorCode:    "errSign",
-			ErrorMessage: "Error when sign transaction",
+			ErrorMessage: err.Error(),
 		}
 	}
 
-	// log.Printf("Sign Result: hash=%s\n", string(txHash))
-
-	txSigned := &TxSigned{
-		blob: string(signedData),
-		hash: string(txHash),
+	_, blob, err := Raw(tx)
+	if err != nil {
+		log.Printf("doSubmit error:%s\n", err)
+		return &TxResult{
+			ErrorCode:    "errSerialize",
+			ErrorMessage: err.Error(),
+		}
 	}
+	txSigned := &TxSigned{
+		blob: fmt.Sprintf("%X", blob),
+		hash: string(crypto.B2H32(*tx.GetHash())),
+	}
+
+	// log.Printf("hash:%s\n", txSigned.hash)
+	// log.Printf("blob:%s\n", txSigned.blob)
 
 	return s.handleSignedTx(txSigned)
 }

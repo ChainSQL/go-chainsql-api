@@ -17,9 +17,11 @@ type Account struct {
 	secret  string
 }
 
+var tableName = "hello2"
+
 func main() {
 	c := core.NewChainsql()
-	err := c.Connect("ws://192.168.29.69:6305")
+	err := c.Connect("ws://127.0.0.1:6006")
 	log.Println("IsConnected:", c.IsConnected())
 	if err != nil {
 		log.Println(err)
@@ -39,7 +41,7 @@ func main() {
 
 	// // testSubLedger(c)
 	// testGenerateAccount(c)
-	// testInsert(c)
+	testInsert(c)
 	// testGetLedger(c)
 	// testSignPlainText(c)
 
@@ -48,6 +50,9 @@ func main() {
 	// testGetBySqlUser(c)
 	// testWebsocket()
 	// testTickerGet(c)
+	for {
+		time.Sleep(time.Second * 10)
+	}
 }
 
 func testGenerateAccount(c *core.Chainsql) {
@@ -70,19 +75,15 @@ func testGenerateAccount(c *core.Chainsql) {
 
 func testInsert(c *core.Chainsql) {
 	var data = []byte(`[{"id":1,"name":"echo","age":18}]`)
-	ret := c.Table("hello").Insert(string(data)).Submit("db_success")
+	ret := c.Table(tableName).Insert(string(data)).Submit("db_success")
 	log.Println(ret)
-
-	for {
-		time.Sleep(time.Second * 10)
-	}
 }
 
 func testGetTableData(c *core.Chainsql) {
 	//Test withfields
 	log.Println("IsConnected:", c.IsConnected())
 	var counts = []byte(`[ "COUNT(*) as count" ]`)
-	ret, err := c.Table("hello").Get("").WithFields(string(counts)).Request()
+	ret, err := c.Table(tableName).Get("").WithFields(string(counts)).Request()
 	if err != nil {
 		log.Println(err)
 		return
@@ -107,15 +108,12 @@ func testGetTableData(c *core.Chainsql) {
 		Index: 0,
 	}
 	limitStr, err := json.Marshal(limit)
-	ret, err = c.Table("hello").Get(string(getRaw)).Limit(string(limitStr)).Order(string(order)).Request()
+	ret, err = c.Table(tableName).Get(string(getRaw)).Limit(string(limitStr)).Order(string(order)).Request()
 	if err != nil {
 		log.Println(err)
 		return
 	}
 	log.Printf("The first 10 records:%s\n", ret)
-	for {
-		time.Sleep(time.Second * 10)
-	}
 }
 
 func testGetBySqlUser(c *core.Chainsql) {

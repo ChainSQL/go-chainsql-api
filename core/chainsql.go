@@ -3,7 +3,8 @@ package core
 import (
 	"log"
 
-	"github.com/ChainSQL/go-chainsql-api/common"
+	"github.com/ChainSQL/go-chainsql-api/crypto"
+	. "github.com/ChainSQL/go-chainsql-api/data"
 	"github.com/ChainSQL/go-chainsql-api/export"
 	"github.com/ChainSQL/go-chainsql-api/net"
 	"github.com/ChainSQL/go-chainsql-api/util"
@@ -13,13 +14,6 @@ import (
 type Chainsql struct {
 	client *net.Client
 	SubmitBase
-}
-
-//TableListSetJSON specifies the table operation format
-type TableListSetJSON struct {
-	common.TableTxFields
-	common.NetFields
-	AutoFillField string
 }
 
 type TableGetSqlJSON struct {
@@ -54,10 +48,10 @@ func (c *Chainsql) Use(owner string) {
 }
 
 // PrepareTx prepare tx json for submit
-func (c *Chainsql) PrepareTx() (TxJSON, error) {
+func (c *Chainsql) PrepareTx() (Signer, error) {
 
 	log.Println("Chainsql prepareTx")
-	tx := &TableListSetJSON{}
+	tx := &TableListSet{}
 	return tx, nil
 }
 
@@ -90,9 +84,9 @@ func (c *Chainsql) OnLedgerClosed(callback export.Callback) {
 // }
 func (c *Chainsql) GenerateAccount(args ...string) (string, error) {
 	if len(args) == 0 {
-		return util.GenerateAccount()
+		return crypto.GenerateAccount()
 	} else {
-		return util.GenerateAccount(args[0])
+		return crypto.GenerateAccount(args[0])
 	}
 }
 

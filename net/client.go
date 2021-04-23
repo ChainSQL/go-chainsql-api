@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/ChainSQL/go-chainsql-api/common"
+	"github.com/ChainSQL/go-chainsql-api/crypto"
 	"github.com/ChainSQL/go-chainsql-api/event"
 	"github.com/ChainSQL/go-chainsql-api/export"
 	"github.com/ChainSQL/go-chainsql-api/util"
@@ -357,7 +358,7 @@ func (c *Client) GetTableData(dataJSON interface{}, bSql bool) (string, error) {
 		req.Command = "r_get_sql_user"
 	}
 	req.TxJSON = dataJSON
-	accStr, err := util.GenerateAccount(c.Auth.Secret)
+	accStr, err := crypto.GenerateAccount(c.Auth.Secret)
 	if err != nil {
 		return "", err
 	}

@@ -7,10 +7,10 @@ import (
 )
 
 //PrepareTable return the account sequence and table NameInDB
-func PrepareTable(client *Client, name string) (int, string, error) {
+func PrepareTable(client *Client, name string) (uint32, string, error) {
 	w := new(sync.WaitGroup)
 	w.Add(2)
-	seq := 0
+	var seq uint32 = 0
 	nameInDB := ""
 	err := error(nil)
 	go func() {
@@ -25,7 +25,7 @@ func PrepareTable(client *Client, name string) (int, string, error) {
 			err = errTmp
 			return
 		}
-		seq = int(sequence)
+		seq = uint32(sequence)
 	}()
 	go func() {
 		defer w.Done()
