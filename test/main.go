@@ -21,31 +21,31 @@ var tableName = "hello2"
 
 func main() {
 	c := core.NewChainsql()
-	err := c.Connect("ws://127.0.0.1:6006")
-	log.Println("IsConnected:", c.IsConnected())
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	var root = Account{
-		address: "zHb9CJAWyB4zj91VRWn96DkukG4bwdtyTh",
-		secret:  "xnoPBzXtMeMyMHUVTgbuqAfg1SUTb",
-	}
+	// err := c.Connect("ws://127.0.0.1:6006")
+	// log.Println("IsConnected:", c.IsConnected())
+	// if err != nil {
+	// 	log.Println(err)
+	// 	return
+	// }
+	// var root = Account{
+	// 	address: "zHb9CJAWyB4zj91VRWn96DkukG4bwdtyTh",
+	// 	secret:  "xnoPBzXtMeMyMHUVTgbuqAfg1SUTb",
+	// }
 	// var user = Account{
 	// 	address: "zBonp9s7isAaDUPcfrFfYjNnhgeznoBHxF",
 	// 	secret:  "xn2FhQLRQqhKJeNhpgMzp2PGAYbdw",
 	// }
 	// c.As(user.address, user.secret)
-	c.As(root.address, root.secret)
-	c.Use(root.address)
+	// c.As(root.address, root.secret)
+	// c.Use(root.address)
 
 	// // testSubLedger(c)
-	// testGenerateAccount(c)
-	testInsert(c)
+	testGenerateAccount(c)
+	// testInsert(c)
 	// testGetLedger(c)
 	// testSignPlainText(c)
 
-	testGetTableData(c)
+	// testGetTableData(c)
 
 	// testGetBySqlUser(c)
 	// testWebsocket()
