@@ -2,6 +2,8 @@ package core
 
 import (
 	"fmt"
+
+	"github.com/ChainSQL/go-chainsql-api/net"
 )
 
 // Base is a struct
@@ -19,8 +21,25 @@ func (b *Base) Say2() {
 // Ripple is aaa
 type Ripple struct {
 	*Base
+	client *net.Client
+	SubmitBase
 }
 
 func (r *Ripple) Say() {
 	fmt.Println("Ripple")
+}
+
+func NewRipple() *Ripple {
+	ripple := &Ripple{
+		Base:   &Base{},
+		client: net.NewClient(),
+	}
+	ripple.SubmitBase.client = ripple.client
+	ripple.SubmitBase.IPrepare = ripple
+	return ripple
+}
+
+func (r *Ripple) Pay(accountId string, value string) *Ripple {
+
+	return r
 }

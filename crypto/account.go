@@ -55,3 +55,21 @@ func GenerateAccount(args ...string) (string, error) {
 	}
 	return string(jsonStr), nil
 }
+
+func ValidationCreate() (string, error) {
+	generated := Account{}
+	jsonStr, err := json.Marshal(generated)
+	if err != nil {
+		return "", err
+	}
+	return string(jsonStr), nil
+}
+
+func GetAccountInfo(address string) (string, error) {
+	generated := Account{}
+	jsonStr, err := json.Marshal(generated)
+	if err != nil {
+		return "", err
+	}
+	return string(jsonStr), nil
+}

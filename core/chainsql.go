@@ -130,3 +130,38 @@ func (c *Chainsql) Disconnect() {
 		c.client.GetWebocketManager().Disconnect()
 	}
 }
+
+func (c *Chainsql) ValidationCreate() (string, error) {
+	return crypto.ValidationCreate()
+}
+
+func (c *Chainsql) GetServerInfo() (string, error) {
+	return "", nil
+}
+
+func (c *Chainsql) GetAccountInfo(address string) (string, error) {
+	return crypto.GetAccountInfo(address)
+}
+
+func (c *Chainsql) Pay(accountId string, value string) *Ripple {
+	r := NewRipple()
+	return r.Pay(accountId, value)
+}
+
+func (c *Chainsql) CreateSchema(schemaInfo string) *Chainsql {
+
+	return c
+}
+
+func (c *Chainsql) ModifySchema(schemaInfo string) *Chainsql {
+
+	return c
+}
+
+func (c *Chainsql) GetSchemaList(params string) (string, error) {
+	return "", nil
+}
+
+func (c *Chainsql) UpdateSchemaConfig(params string) *Chainsql {
+	return c
+}
