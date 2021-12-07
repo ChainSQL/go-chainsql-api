@@ -438,3 +438,112 @@ func (c *Client) asyncRequest(v interface{}) {
 	data, _ := json.Marshal(v)
 	c.sendMsgChan <- string(data)
 }
+
+// GetServerInfo request for ServerInfo
+func (c *Client) GetServerInfo() (string, error) {
+	type getServerInfo struct {
+		common.RequestBase
+	}
+	c.cmdIDs++
+	accountReq := &getServerInfo{}
+	accountReq.ID = c.cmdIDs
+	accountReq.Command = "server_info"
+
+	request := c.syncRequest(accountReq)
+
+	err := c.parseResponseError(request)
+	if err != nil {
+		return "", err
+	}
+
+	return request.Response.Value, nil
+}
+
+func (c *Client) GetSchemaList(params string) (string, error) {
+	var jsonObj interface{}
+	if params != "" {
+		json.Unmarshal([]byte(params), &jsonObj)
+	}
+	type getSchemaList struct {
+		common.RequestBase
+		jsonObj interface{}
+	}
+
+	c.cmdIDs++
+	schemaListReq := &getSchemaList{}
+	schemaListReq.ID = c.cmdIDs
+	schemaListReq.Command = "schema_list"
+	schemaListReq.jsonObj = jsonObj
+	request := c.syncRequest(schemaListReq)
+
+	err := c.parseResponseError(request)
+	if err != nil {
+		return "", err
+	}
+	return request.Response.Value, nil
+}
+func (c *Client) GetSchemaInfo(schemaID string) (string, error) {
+	if schemaID == "" {
+		panic("Invalid parameter")
+	}
+	type getSchemaInfo struct {
+		common.RequestBase
+		Schema string `json:"schema"`
+	}
+	c.cmdIDs++
+	schemaInfoReq := &getSchemaInfo{}
+	schemaInfoReq.ID = c.cmdIDs
+	schemaInfoReq.Command = "schema_info"
+	schemaInfoReq.Schema = schemaID
+	request := c.syncRequest(schemaInfoReq)
+
+	err := c.parseResponseError(request)
+	if err != nil {
+		return "", err
+	}
+	return request.Response.Value, nil
+}
+
+func (c *Client) StopSchema(schemaID string) (string, error) {
+	if schemaID == "" {
+		panic("Invalid parameter")
+	}
+	type StopSchema struct {
+		common.RequestBase
+		Schema string `json:"schema"`
+	}
+	c.cmdIDs++
+	StopSchemaReq := &StopSchema{}
+	StopSchemaReq.ID = c.cmdIDs
+	StopSchemaReq.Command = "stop"
+	StopSchemaReq.Schema = schemaID
+	request := c.syncRequest(StopSchemaReq)
+
+	err := c.parseResponseError(request)
+	if err != nil {
+		return "", err
+	}
+	return request.Response.Value, nil
+}
+
+func (c *Client) StartSchema(schemaID string) (string, error) {
+	if schemaID == "" {
+		panic("Invalid parameter")
+	}
+	type StartSchema struct {
+		common.RequestBase
+		Schema string `json:"schema"`
+	}
+	c.cmdIDs++
+	StartSchemaReq := &StartSchema{}
+	StartSchemaReq.ID = c.cmdIDs
+	StartSchemaReq.Command = "schema_start"
+	StartSchemaReq.Schema = schemaID
+	request := c.syncRequest(StartSchemaReq)
+
+	err := c.parseResponseError(request)
+	if err != nil {
+		return "", err
+	}
+	return request.Response.Value, nil
+}

@@ -166,6 +166,8 @@ var encodings = map[enc]string{
 	enc{ST_HASH256, 21}: "Digest",
 	enc{ST_HASH256, 22}: "Channel",
 	enc{ST_HASH256, 24}: "CheckID",
+	enc{ST_HASH256, 58}: "AnchorLedgerHash",
+	enc{ST_HASH256, 59}: "SchemaID",
 	// currency amount (common)
 	enc{ST_AMOUNT, 1}:  "Amount",
 	enc{ST_AMOUNT, 2}:  "Balance",
@@ -203,16 +205,18 @@ var encodings = map[enc]string{
 	enc{ST_VL, 51}: "TableName",
 	enc{ST_VL, 52}: "Raw",
 	enc{ST_VL, 54}: "AutoFillField",
+	enc{ST_VL, 68}: "SchemaName",
+	enc{ST_VL, 69}: "Endpoint",
 	// account
-	enc{ST_ACCOUNT, 1}: "Account",
-	enc{ST_ACCOUNT, 2}: "Owner",
-	enc{ST_ACCOUNT, 3}: "Destination",
-	enc{ST_ACCOUNT, 4}: "Issuer",
-	enc{ST_ACCOUNT, 5}: "Authorize",
-	enc{ST_ACCOUNT, 6}: "Unauthorize",
-	enc{ST_ACCOUNT, 7}: "Target",
-	enc{ST_ACCOUNT, 8}: "RegularKey",
-
+	enc{ST_ACCOUNT, 1}:  "Account",
+	enc{ST_ACCOUNT, 2}:  "Owner",
+	enc{ST_ACCOUNT, 3}:  "Destination",
+	enc{ST_ACCOUNT, 4}:  "Issuer",
+	enc{ST_ACCOUNT, 5}:  "Authorize",
+	enc{ST_ACCOUNT, 6}:  "Unauthorize",
+	enc{ST_ACCOUNT, 7}:  "Target",
+	enc{ST_ACCOUNT, 8}:  "RegularKey",
+	enc{ST_ACCOUNT, 53}: "SchemaAdmin",
 	// inner object
 	enc{ST_OBJECT, 1}:  "EndOfObject",
 	enc{ST_OBJECT, 2}:  "TransactionMetaData",
@@ -229,6 +233,9 @@ var encodings = map[enc]string{
 	enc{ST_OBJECT, 16}: "Signer",
 	enc{ST_OBJECT, 18}: "Majority",
 	enc{ST_OBJECT, 50}: "Table",
+	enc{ST_OBJECT, 52}: "Validator",
+	enc{ST_OBJECT, 53}: "Peer",
+
 	// array of objects
 	enc{ST_ARRAY, 1}:  "EndOfArray",
 	enc{ST_ARRAY, 2}:  "SigningAccounts",
@@ -242,12 +249,15 @@ var encodings = map[enc]string{
 	enc{ST_ARRAY, 51}: "Tables",
 	// array of objects (uncommon)
 	enc{ST_ARRAY, 16}: "Majorities",
+	enc{ST_ARRAY, 53}: "Validators",
+	enc{ST_ARRAY, 54}: "PeerList",
 	// 8-bit unsigned integers (common)
 	enc{ST_UINT8, 1}: "CloseResolution",
 	enc{ST_UINT8, 2}: "Method",
 	enc{ST_UINT8, 3}: "TransactionResult",
 	// 8-bit unsigned integers (uncommon)
 	enc{ST_UINT8, 16}: "TickSize",
+	enc{ST_UINT8, 28}: "SchemaStrategy",
 	// 160-bit (common)
 	enc{ST_HASH160, 1}:  "TakerPaysCurrency",
 	enc{ST_HASH160, 2}:  "TakerPaysIssuer",

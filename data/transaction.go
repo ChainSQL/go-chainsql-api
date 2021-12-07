@@ -194,6 +194,31 @@ type SQLStatement struct {
 	// AutoFillField *VariableLength `json:"AutoFillField,omitempty"`
 }
 
+type SchemaCreate struct {
+	TxBase
+	SchemaName       VariableLength
+	SchemaStrategy   uint8
+	SchemaAdmin      *Account `json:",omitempty"`
+	AnchorLedgerHash *Hash256 `json:",omitempty"`
+	Validators       []ValidatorFormat
+	PeerList         []PeerFormat
+}
+
+type SchemaModify struct {
+	TxBase
+	OpType     uint16
+	Validators []ValidatorFormat
+	PeerList   []PeerFormat
+	SchemaID   Hash256
+}
+
+func (txBase *TxBase) SetTxBase(seq uint32, fee Value, lastLedgerSequence *uint32, account Account) {
+	txBase.Sequence = seq
+	txBase.Fee = fee
+	txBase.Account = account
+	txBase.LastLedgerSequence = lastLedgerSequence
+}
+
 func (t *TxBase) GetBase() *TxBase                    { return t }
 func (t *TxBase) GetType() string                     { return txNames[t.TransactionType] }
 func (t *TxBase) GetTransactionType() TransactionType { return t.TransactionType }
@@ -203,7 +228,8 @@ func (t *TxBase) GetSignature() *VariableLength       { return t.TxnSignature }
 func (t *TxBase) SigningPrefix() HashPrefix           { return HP_TRANSACTION_SIGN }
 func (t *TxBase) PathSet() PathSet                    { return PathSet(nil) }
 func (t *TxBase) GetHash() *Hash256                   { return &t.Hash }
-
+func (t *TxBase) GetRaw() string                      { return "" }
+func (t *TxBase) GetStatements() string               { return "" }
 func (t *TxBase) Compare(other *TxBase) int {
 	switch {
 	case t.Account.Equals(other.Account):
@@ -222,6 +248,10 @@ func (t *TxBase) Compare(other *TxBase) int {
 	}
 }
 
+// func SetBase(txInterface TxInterface) {
+// 	txInterface.SetSeq()
+
+// }
 func (t *TxBase) InitialiseForSigning() {
 	if t.SigningPubKey == nil {
 		t.SigningPubKey = new(PublicKey)

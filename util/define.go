@@ -31,3 +31,8 @@ const (
 	REQUEST_TIMEOUT = 5
 	DIAL_TIMEOUT    = 2
 )
+
+const (
+	SchemaAdd = "schema_add"
+	SchemaDel = "schema_del"
+)

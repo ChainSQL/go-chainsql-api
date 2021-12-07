@@ -15,6 +15,11 @@ type Account struct {
 	PrivateKey   string `json:"privateKey"`
 }
 
+type SeedKey struct {
+	Seed      string `json:"seed"`
+	PublicKey string `json:"publicKey"`
+}
+
 func GenerateAccount(args ...string) (string, error) {
 	var seed Hash
 	var err error
@@ -57,16 +62,28 @@ func GenerateAccount(args ...string) (string, error) {
 }
 
 func ValidationCreate() (string, error) {
-	generated := Account{}
-	jsonStr, err := json.Marshal(generated)
+	var seed Hash
+	var err error
+	var key *ecdsaKey
+	rndBytes := make([]byte, 16)
+	if _, err := rand.Read(rndBytes); err != nil {
+		return "", err
+	}
+	seed, err = GenerateFamilySeed(string(rndBytes))
 	if err != nil {
 		return "", err
 	}
-	return string(jsonStr), nil
-}
-
-func GetAccountInfo(address string) (string, error) {
-	generated := Account{}
+	key, err = NewECDSAKey(seed.Payload())
+	if err != nil {
+		log.Println(err)
+		return "", err
+	}
+	sequenceZero := uint32(0)
+	publicKey, _ := AccountPublicKey(key, &sequenceZero)
+	generated := SeedKey{
+		Seed:      seed.String(),
+		PublicKey: publicKey.String(),
+	}
 	jsonStr, err := json.Marshal(generated)
 	if err != nil {
 		return "", err

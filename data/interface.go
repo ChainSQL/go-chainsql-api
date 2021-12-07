@@ -16,6 +16,9 @@ type Signer interface {
 	SigningPrefix() HashPrefix
 	GetPublicKey() *PublicKey
 	GetSignature() *VariableLength
+	SetTxBase(seq uint32, fee Value, astLedgerSequence *uint32, account Account)
+	GetRaw() string
+	GetStatements() string
 }
 
 type Router interface {

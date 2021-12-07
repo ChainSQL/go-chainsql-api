@@ -17,31 +17,38 @@ type Account struct {
 	secret  string
 }
 
+var user1 = Account{
+	address: "zBonp9s7isAaDUPcfrFfYjNnhgeznoBHxF",
+	secret:  "xn2FhQLRQqhKJeNhpgMzp2PGAYbdw",
+}
+var user2 = Account{
+	address: "zKXfeKXkTtLSTkEzaJyu2cRmRBFRvTW2zc",
+	secret:  "xhtBo8BLBZtTgc3LHnRspaFro5P4H",
+}
 var tableName = "hello2"
 
 func main() {
 	c := core.NewChainsql()
-	// err := c.Connect("ws://127.0.0.1:6006")
+	//err := c.Connect("wss://zxlm-fgm.peersafe.cn/ws-zhu")
+	//err := c.Connect("ws://10.100.0.78:25510")
+	err := c.Connect("ws://localhost:5510")
 	// log.Println("IsConnected:", c.IsConnected())
 	// if err != nil {
-	// 	log.Println(err)
+	log.Println(err)
 	// 	return
 	// }
 	// var root = Account{
 	// 	address: "zHb9CJAWyB4zj91VRWn96DkukG4bwdtyTh",
 	// 	secret:  "xnoPBzXtMeMyMHUVTgbuqAfg1SUTb",
 	// }
-	// var user = Account{
-	// 	address: "zBonp9s7isAaDUPcfrFfYjNnhgeznoBHxF",
-	// 	secret:  "xn2FhQLRQqhKJeNhpgMzp2PGAYbdw",
-	// }
-	// c.As(user.address, user.secret)
+
+	c.As(user1.address, user1.secret)
 	// c.As(root.address, root.secret)
 	// c.Use(root.address)
 
 	// // testSubLedger(c)
-	testGenerateAccount(c)
-	// testInsert(c)
+	//testGenerateAccount(c)
+	//testInsert(c)
 	// testGetLedger(c)
 	// testSignPlainText(c)
 
@@ -49,7 +56,17 @@ func main() {
 
 	// testGetBySqlUser(c)
 	// testWebsocket()
-	// testTickerGet(c)
+	// testTickerGet(c)\
+	//testValidationCreate(c)
+	//	testGetAccountInfo(c)
+	//testGetServerInfo(c)
+	//testPay(c)
+	//testSchemaCreate(c)  //创建子链
+	//testSchemaModify(c)  // 修改子链
+	//testGetSchemaList(c)  //获取子链列表
+	//testGetSchemaInfo(c)  //依据子链id获取子链信息
+	testStopSchema(c) //
+	//testStartSchema(c)
 	for {
 		time.Sleep(time.Second * 10)
 	}
@@ -75,7 +92,7 @@ func testGenerateAccount(c *core.Chainsql) {
 
 func testInsert(c *core.Chainsql) {
 	var data = []byte(`[{"id":1,"name":"echo","age":18}]`)
-	ret := c.Table(tableName).Insert(string(data)).Submit("db_success")
+	ret := c.Table("gmTest50").Insert(string(data)).Submit("db_success")
 	log.Println(ret)
 }
 
@@ -205,4 +222,75 @@ func testTickerGet(c *core.Chainsql) {
 	time.Sleep(50000 * time.Millisecond)
 	ticker.Stop()
 	done <- true
+}
+
+func testValidationCreate(c *core.Chainsql) {
+	seedKey, err := c.ValidationCreate()
+	if err != nil {
+		log.Println(err)
+	}
+	log.Printf("seedKey %s\n", seedKey)
+}
+
+func testGetAccountInfo(c *core.Chainsql) {
+	account, err := c.GetAccountInfo(user1.address)
+	if err != nil {
+		log.Println(err)
+	}
+	log.Printf("seedKey %s\n", account)
+}
+
+func testGetServerInfo(c *core.Chainsql) {
+	serverInfo, err := c.GetServerInfo()
+	if err != nil {
+		log.Println(err)
+	}
+	log.Printf("seedKey %s\n", serverInfo)
+}
+
+func testPay(c *core.Chainsql) {
+	ret := c.Pay(user2.address, 30).Submit("validate_success")
+	log.Println(ret)
+}
+
+func testSchemaCreate(c *core.Chainsql) {
+	schemaInfo := "{\"SchemaName\":\"hello\",\"WithState\":false,\"SchemaAdmin\":\"zBonp9s7isAaDUPcfrFfYjNnhgeznoBHxF\",\"Validators\":[{\"Validator\":{\"PublicKey\":\"032AE5321413947612478BD8DF609ACCBB7EB07930404AE38F8FF48721D82C0D45\"}},{\"Validator\":{\"PublicKey\":\"0313FEF8C100B25A62E1428D0B414FD945B00F369E6735AD52AFBE3DB88D80AAE9\"}},{\"Validator\":{\"PublicKey\":\"030F9602B680A71D962111CC3EF9D27601EB9FEC7C3BA24BB4323D94C3A1CF9A04\"}},{\"Validator\":{\"PublicKey\":\"02221A8AA9228AD1199BE05AD64FC6A4625525FE8C9780FD68223C85168B58E738\"}}],\"PeerList\":[{\"Peer\":{\"Endpoint\":\"10.100.0.78:25410\"}},{\"Peer\":{\"Endpoint\":\"10.100.0.78:25411\"}},{\"Peer\":{\"Endpoint\":\"10.100.0.104:5410\"}},{\"Peer\":{\"Endpoint\":\"10.100.0.78:25412\"}}]}"
+	//schemaInfo := "{\"SchemaName\":\"hello\",\"WithState\":false,\"SchemaAdmin\":\"zBonp9s7isAaDUPcfrFfYjNnhgeznoBHxF\",\"Validators\":\"fhfhhfhfhfhfh\",\"PeerList\":[{\"Peer\":{\"Endpoint\":\"127.0.0.1:15125\"}},{\"Peer\":{\"Endpoint\":\"127.0.0.1:25125\"}},{\"Peer\":{\"Endpoint\":\"127.0.0.1:35125\"}}]}"
+	ret := c.CreateSchema(schemaInfo).Submit("validate_success")
+	log.Println(ret)
+}
+
+func testSchemaModify(c *core.Chainsql) {
+	schemaInfo := "{\"SchemaID\":\"6BA63B86E5CE48283D03CC21D3BE5F4630CC6572CE7F54982E5AE687C998B7A3\",\"Validators\":[{\"Validator\":{\"PublicKey\":\"02BD87A95F549ECF607D6AE3AEC4C95D0BFF0F49309B4E7A9F15B842EB62A8ED1B\"}}],\"PeerList\":[{\"Peer\":{\"Endpoint\":\"192.168.29.108:5125\"}}]}"
+	//schemaInfo := "{\"SchemaName\":\"hello\",\"WithState\":false,\"SchemaAdmin\":\"zBonp9s7isAaDUPcfrFfYjNnhgeznoBHxF\",\"Validators\":\"fhfhhfhfhfhfh\",\"PeerList\":[{\"Peer\":{\"Endpoint\":\"127.0.0.1:15125\"}},{\"Peer\":{\"Endpoint\":\"127.0.0.1:25125\"}},{\"Peer\":{\"Endpoint\":\"127.0.0.1:35125\"}}]}"
+	ret := c.ModifySchema("schema_add", schemaInfo).Submit("validate_success")
+	log.Println(ret)
+}
+
+func testGetSchemaList(c *core.Chainsql) {
+	param := ""
+	ret, err := c.GetSchemaList(param)
+	log.Println(ret)
+	log.Println(err)
+}
+
+func testGetSchemaInfo(c *core.Chainsql) {
+	schemaID := "68AAF6D84D4D2F18E3B00475475011F56A52B2877DD77B3190803F4FF9EB2F6E"
+	ret, err := c.GetSchemaInfo(schemaID)
+	log.Println(ret)
+	log.Println(err)
+}
+
+func testStopSchema(c *core.Chainsql) {
+	schemaID := "E3EEFAEAEDBFFEC22DF4BBC602E5D7DA0DEF9308F23A76ADAE03840A00141036"
+	ret, err := c.StopSchema(schemaID)
+	log.Println(ret)
+	log.Println(err)
+}
+
+func testStartSchema(c *core.Chainsql) {
+	schemaID := "E3EEFAEAEDBFFEC22DF4BBC602E5D7DA0DEF9308F23A76ADAE03840A00141036"
+	ret, err := c.StartSchema(schemaID)
+	log.Println(ret)
+	log.Println(err)
 }

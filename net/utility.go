@@ -39,3 +39,24 @@ func PrepareTable(client *Client, name string) (uint32, string, error) {
 	w.Wait()
 	return seq, nameInDB, err
 }
+
+//PrepareTable return the account sequence and table NameInDB
+func PrepareRipple(client *Client) (uint32, error) {
+
+	var seq uint32 = 0
+	err := error(nil)
+
+	info, errTmp := client.GetAccountInfo(client.Auth.Address)
+	if errTmp != nil {
+		err = errTmp
+		return 0, errTmp
+	}
+	sequence, errTmp := jsonparser.GetInt([]byte(info), "result", "account_data", "Sequence")
+	if errTmp != nil {
+		err = errTmp
+		return 0, errTmp
+	}
+	seq = uint32(sequence)
+
+	return seq, err
+}

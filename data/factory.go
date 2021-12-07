@@ -43,6 +43,10 @@ const (
 	TRUST_SET       TransactionType = 20
 	TABLE_LIST_SET  TransactionType = 21
 	SQLSTATEMENT    TransactionType = 22
+	SQLTRANSACTION  TransactionType = 23
+	CONTRACT        TransactionType = 24
+	SCHEMA_CREATE   TransactionType = 25
+	SCHEMA_MODIFY   TransactionType = 26
 	ACCOUNT_DELETE  TransactionType = 51
 	AMENDMENT       TransactionType = 100
 	SET_FEE         TransactionType = 101
@@ -88,6 +92,8 @@ var TxFactory = [...]func() Transaction{
 	CHECK_CREATE:    func() Transaction { return &CheckCreate{TxBase: TxBase{TransactionType: CHECK_CREATE}} },
 	CHECK_CASH:      func() Transaction { return &CheckCash{TxBase: TxBase{TransactionType: CHECK_CASH}} },
 	CHECK_CANCEL:    func() Transaction { return &CheckCancel{TxBase: TxBase{TransactionType: CHECK_CANCEL}} },
+	SCHEMA_CREATE:   func() Transaction { return &SchemaCreate{TxBase: TxBase{TransactionType: SCHEMA_CREATE}} },
+	SCHEMA_MODIFY:   func() Transaction { return &SchemaModify{TxBase: TxBase{TransactionType: SCHEMA_MODIFY}} },
 }
 
 var ledgerEntryNames = [...]string{
@@ -144,6 +150,10 @@ var txNames = [...]string{
 	CHECK_CANCEL:    "CheckCancel",
 	TABLE_LIST_SET:  "TableListSet",
 	SQLSTATEMENT:    "SQLStatement",
+	SQLTRANSACTION:  "SQLTransaction",
+	CONTRACT:        "Contract",
+	SCHEMA_CREATE:   "SchemaCreate",
+	SCHEMA_MODIFY:   "SchemaModify",
 }
 
 var txTypes = map[string]TransactionType{
@@ -168,6 +178,10 @@ var txTypes = map[string]TransactionType{
 	"CheckCancel":          CHECK_CANCEL,
 	"TableListSet":         TABLE_LIST_SET,
 	"SQLStatement":         SQLSTATEMENT,
+	"SQLTransaction":       SQLTRANSACTION,
+	"Contract":             CONTRACT,
+	"SchemaCreate":         SCHEMA_CREATE,
+	"SchemaModify":         SCHEMA_MODIFY,
 }
 
 var HashableTypes []string
