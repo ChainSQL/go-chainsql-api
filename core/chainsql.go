@@ -11,6 +11,7 @@ import (
 	"github.com/ChainSQL/go-chainsql-api/export"
 	"github.com/ChainSQL/go-chainsql-api/net"
 	"github.com/ChainSQL/go-chainsql-api/util"
+	"github.com/buger/jsonparser"
 )
 
 // Chainsql is the interface struct for this package
@@ -314,4 +315,28 @@ func (c *Chainsql) StopSchema(schemaID string) (string, error) {
 
 func (c *Chainsql) StartSchema(schemaID string) (string, error) {
 	return c.client.StartSchema(schemaID)
+}
+
+// func (c *Chainsql) setSchema(schemaId string) {
+// 	if c.client.SchemaID == schemaId {
+
+// 	}
+// }
+func (c *Chainsql) GetSchemaId(hash string) (string, error) {
+	response, _ := c.client.GetTransaction(hash)
+	LedgerEntryType, err := jsonparser.GetString([]byte(response), "result", "meta", "AffectedNodes", "[0]", "CreatedNode", "LedgerEntryType")
+	if err != nil {
+		return "", err
+	}
+	if LedgerEntryType == "Schema" {
+		schemaID, err := jsonparser.GetString([]byte(response), "result", "meta", "AffectedNodes", "[0]", "CreatedNode", "LedgerIndex")
+		if err != nil {
+			return "", err
+		}
+		return schemaID, nil
+	}
+	panic("Invalid parameter")
+}
+func (c *Chainsql) GetTransaction(hash string) (string, error) {
+	return c.client.GetTransaction(hash)
 }

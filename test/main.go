@@ -60,13 +60,15 @@ func main() {
 	//testValidationCreate(c)
 	//	testGetAccountInfo(c)
 	//testGetServerInfo(c)
-	//testPay(c)
-	//testSchemaCreate(c)  //创建子链
+	//	testPay(c)
+	//testSchemaCreate(c) //创建子链
 	//testSchemaModify(c)  // 修改子链
-	//testGetSchemaList(c)  //获取子链列表
+	//testGetSchemaList(c) //获取子链列表
 	//testGetSchemaInfo(c)  //依据子链id获取子链信息
-	testStopSchema(c) //
+	//testStopSchema(c) //
 	//testStartSchema(c)
+	//testGetTransaction(c)
+	testGetSchemaId(c)
 	for {
 		time.Sleep(time.Second * 10)
 	}
@@ -249,7 +251,7 @@ func testGetServerInfo(c *core.Chainsql) {
 }
 
 func testPay(c *core.Chainsql) {
-	ret := c.Pay(user2.address, 30).Submit("validate_success")
+	ret := c.Pay(user2.address, 30000000).Submit("validate_success")
 	log.Println(ret)
 }
 
@@ -291,6 +293,20 @@ func testStopSchema(c *core.Chainsql) {
 func testStartSchema(c *core.Chainsql) {
 	schemaID := "E3EEFAEAEDBFFEC22DF4BBC602E5D7DA0DEF9308F23A76ADAE03840A00141036"
 	ret, err := c.StartSchema(schemaID)
+	log.Println(ret)
+	log.Println(err)
+}
+
+func testGetTransaction(c *core.Chainsql) {
+	txHash := "D549C16DF43B29FDDC7DE8C8A192F1356821E88284E8FCC982CD1572CD3A5699"
+	ret, err := c.GetTransaction(txHash)
+	log.Println(ret)
+	log.Println(err)
+}
+
+func testGetSchemaId(c *core.Chainsql) {
+	txHash := "D549C16DF43B29FDDC7DE8C8A192F1356821E88284E8FCC982CD1572CD3A5699"
+	ret, err := c.GetSchemaId(txHash)
 	log.Println(ret)
 	log.Println(err)
 }

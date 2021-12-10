@@ -22,7 +22,7 @@ const ReconnectInterval = 10
 // Client is used to send and recv websocket msg
 type Client struct {
 	cmdIDs      int64
-	schemaID    string
+	SchemaID    string
 	wm          *WebsocketManager
 	sendMsgChan chan string
 	recvMsgChan chan string
@@ -44,6 +44,7 @@ func NewClient() *Client {
 		ServerInfo: NewServerInfo(),
 		Event:      event.NewEventManager(),
 		inited:     false,
+		SchemaID:   "",
 	}
 }
 
@@ -540,6 +541,43 @@ func (c *Client) StartSchema(schemaID string) (string, error) {
 	StartSchemaReq.Command = "schema_start"
 	StartSchemaReq.Schema = schemaID
 	request := c.syncRequest(StartSchemaReq)
+
+	err := c.parseResponseError(request)
+	if err != nil {
+		return "", err
+	}
+	return request.Response.Value, nil
+}
+
+func (c *Client) Unsubscribe(schemaID string) (string, error) {
+	type Unsubscribe struct {
+		common.RequestBase
+	}
+	c.cmdIDs++
+	UnsubscribeReq := &Unsubscribe{}
+	UnsubscribeReq.ID = c.cmdIDs
+	UnsubscribeReq.Command = "unsubscribe"
+	request := c.syncRequest(UnsubscribeReq)
+
+	err := c.parseResponseError(request)
+	if err != nil {
+		return "", err
+	}
+	return request.Response.Value, nil
+}
+
+func (c *Client) GetTransaction(hash string) (string, error) {
+	type getTransaction struct {
+		common.RequestBase
+		Transaction string `json:"transaction"`
+	}
+
+	c.cmdIDs++
+	getTransactionReq := &getTransaction{}
+	getTransactionReq.ID = c.cmdIDs
+	getTransactionReq.Command = "tx"
+	getTransactionReq.Transaction = hash
+	request := c.syncRequest(getTransactionReq)
 
 	err := c.parseResponseError(request)
 	if err != nil {
