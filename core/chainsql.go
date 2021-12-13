@@ -3,6 +3,7 @@ package core
 import (
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"log"
 	"strings"
 
@@ -317,22 +318,33 @@ func (c *Chainsql) StartSchema(schemaID string) (string, error) {
 	return c.client.StartSchema(schemaID)
 }
 
-// func (c *Chainsql) setSchema(schemaId string) {
-// 	if c.client.SchemaID == schemaId {
-
-// 	}
-// }
+func (c *Chainsql) SetSchema(schemaId string) {
+	if c.client.SchemaID != schemaId {
+		c.client.Unsubscribe(schemaId)
+		c.client.SchemaID = schemaId
+		c.client.InitSubscription()
+	}
+}
 func (c *Chainsql) GetSchemaId(hash string) (string, error) {
 	response, _ := c.client.GetTransaction(hash)
-	LedgerEntryType, err := jsonparser.GetString([]byte(response), "result", "meta", "AffectedNodes", "[0]", "CreatedNode", "LedgerEntryType")
-	if err != nil {
-		return "", err
+	if response == "" {
+		panic("Invalid parameter")
 	}
-	if LedgerEntryType == "Schema" {
-		schemaID, err := jsonparser.GetString([]byte(response), "result", "meta", "AffectedNodes", "[0]", "CreatedNode", "LedgerIndex")
-		if err != nil {
-			return "", err
+	schemaID := ""
+	flag := false
+	//LedgerEntryType, err := jsonparser.GetString([]byte(response), "result", "meta", "AffectedNodes", "[0]", "CreatedNode", "LedgerEntryType")
+	jsonparser.ArrayEach([]byte(response), func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+		LedgerEntryType, err := jsonparser.GetString(value, "CreatedNode", "LedgerEntryType")
+		if err == nil {
+			if LedgerEntryType == "Schema" {
+				schemaID, _ = jsonparser.GetString([]byte(value), "CreatedNode", "LedgerIndex")
+				flag = true
+				fmt.Println(schemaID, flag)
+			}
 		}
+
+	}, "result", "meta", "AffectedNodes")
+	if flag {
 		return schemaID, nil
 	}
 	panic("Invalid parameter")

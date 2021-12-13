@@ -78,7 +78,7 @@ func (c *Client) reConnect(url string) error {
 		c.init()
 	} else {
 		//connect changed,only subscribe
-		c.initSubscription()
+		c.InitSubscription()
 	}
 	return nil
 }
@@ -89,13 +89,13 @@ func (c *Client) init() {
 
 	go c.processMessage()
 	go c.checkReconnection()
-	c.initSubscription()
+	c.InitSubscription()
 	c.inited = true
 }
 
 func (c *Client) checkReconnection() {
 	c.wm.OnReconnected(func() {
-		c.initSubscription()
+		c.InitSubscription()
 	})
 }
 
@@ -103,7 +103,7 @@ func (c *Client) GetWebocketManager() *WebsocketManager {
 	return c.wm
 }
 
-func (c *Client) initSubscription() {
+func (c *Client) InitSubscription() {
 	type Subscribe struct {
 		common.RequestBase
 		Streams []string `json:"streams"`
@@ -115,6 +115,9 @@ func (c *Client) initSubscription() {
 			ID:      c.cmdIDs,
 		},
 		Streams: []string{"ledger", "server"},
+	}
+	if c.SchemaID != "" {
+		subCmd.SchemaID = c.SchemaID
 	}
 	request := c.syncRequest(subCmd)
 
@@ -309,6 +312,9 @@ func (c *Client) Submit(blob string) string {
 	req.ID = c.cmdIDs
 	req.Command = "submit"
 	req.TxBlob = blob
+	if c.SchemaID != "" {
+		req.SchemaID = c.SchemaID
+	}
 
 	request := c.syncRequest(req)
 
@@ -326,6 +332,9 @@ func (c *Client) SubscribeTx(hash string, callback export.Callback) {
 	req := Request{}
 	req.Command = "subscribe"
 	req.TxHash = hash
+	if c.SchemaID != "" {
+		req.SchemaID = c.SchemaID
+	}
 	c.asyncRequest(req)
 }
 
@@ -340,6 +349,9 @@ func (c *Client) UnSubscribeTx(hash string) {
 	req := Request{}
 	req.Command = "unsubscribe"
 	req.TxHash = hash
+	if c.SchemaID != "" {
+		req.SchemaID = c.SchemaID
+	}
 	c.asyncRequest(req)
 }
 
@@ -400,6 +412,9 @@ func (c *Client) GetTableData(dataJSON interface{}, bSql bool) (string, error) {
 }
 
 func (c *Client) syncRequest(v common.IRequest) *Request {
+	if c.SchemaID != "" {
+		v.SetSchemaID(c.SchemaID)
+	}
 	data, _ := json.Marshal(v)
 	request := NewRequest(v.GetID(), string(data))
 	request.Wait.Add(1)
@@ -552,12 +567,17 @@ func (c *Client) StartSchema(schemaID string) (string, error) {
 func (c *Client) Unsubscribe(schemaID string) (string, error) {
 	type Unsubscribe struct {
 		common.RequestBase
+		Streams []string `json:"streams"`
 	}
 	c.cmdIDs++
-	UnsubscribeReq := &Unsubscribe{}
-	UnsubscribeReq.ID = c.cmdIDs
-	UnsubscribeReq.Command = "unsubscribe"
-	request := c.syncRequest(UnsubscribeReq)
+	unsubCmd := &Unsubscribe{
+		RequestBase: common.RequestBase{
+			Command: "unsubscribe",
+			ID:      c.cmdIDs,
+		},
+		Streams: []string{"ledger", "server"},
+	}
+	request := c.syncRequest(unsubCmd)
 
 	err := c.parseResponseError(request)
 	if err != nil {

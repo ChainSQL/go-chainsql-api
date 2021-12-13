@@ -30,8 +30,8 @@ var tableName = "hello2"
 func main() {
 	c := core.NewChainsql()
 	//err := c.Connect("wss://zxlm-fgm.peersafe.cn/ws-zhu")
-	//err := c.Connect("ws://10.100.0.78:25510")
-	err := c.Connect("ws://localhost:5510")
+	err := c.Connect("ws://10.100.0.78:25510")
+	//err := c.Connect("ws://localhost:5510")
 	// log.Println("IsConnected:", c.IsConnected())
 	// if err != nil {
 	log.Println(err)
@@ -43,6 +43,7 @@ func main() {
 	// }
 
 	c.As(user1.address, user1.secret)
+	//c.SetSchema("FE8AFDD1E0E4A70B3C5E6292A589ECD6C3021567C9E8A7823040E0913D33CFAA")
 	// c.As(root.address, root.secret)
 	// c.Use(root.address)
 
@@ -58,17 +59,18 @@ func main() {
 	// testWebsocket()
 	// testTickerGet(c)\
 	//testValidationCreate(c)
-	//	testGetAccountInfo(c)
+	//testGetAccountInfo(c)
 	//testGetServerInfo(c)
-	//	testPay(c)
+	//testPay(c)
 	//testSchemaCreate(c) //创建子链
 	//testSchemaModify(c)  // 修改子链
 	//testGetSchemaList(c) //获取子链列表
-	//testGetSchemaInfo(c)  //依据子链id获取子链信息
+	//testGetSchemaInfo(c) //依据子链id获取子链信息
 	//testStopSchema(c) //
 	//testStartSchema(c)
 	//testGetTransaction(c)
 	testGetSchemaId(c)
+
 	for {
 		time.Sleep(time.Second * 10)
 	}
@@ -277,21 +279,21 @@ func testGetSchemaList(c *core.Chainsql) {
 }
 
 func testGetSchemaInfo(c *core.Chainsql) {
-	schemaID := "68AAF6D84D4D2F18E3B00475475011F56A52B2877DD77B3190803F4FF9EB2F6E"
+	schemaID := "FE8AFDD1E0E4A70B3C5E6292A589ECD6C3021567C9E8A7823040E0913D33CFAA"
 	ret, err := c.GetSchemaInfo(schemaID)
 	log.Println(ret)
 	log.Println(err)
 }
 
 func testStopSchema(c *core.Chainsql) {
-	schemaID := "E3EEFAEAEDBFFEC22DF4BBC602E5D7DA0DEF9308F23A76ADAE03840A00141036"
+	schemaID := "FE8AFDD1E0E4A70B3C5E6292A589ECD6C3021567C9E8A7823040E0913D33CFAA"
 	ret, err := c.StopSchema(schemaID)
 	log.Println(ret)
 	log.Println(err)
 }
 
 func testStartSchema(c *core.Chainsql) {
-	schemaID := "E3EEFAEAEDBFFEC22DF4BBC602E5D7DA0DEF9308F23A76ADAE03840A00141036"
+	schemaID := "FE8AFDD1E0E4A70B3C5E6292A589ECD6C3021567C9E8A7823040E0913D33CFAA"
 	ret, err := c.StartSchema(schemaID)
 	log.Println(ret)
 	log.Println(err)
@@ -305,7 +307,7 @@ func testGetTransaction(c *core.Chainsql) {
 }
 
 func testGetSchemaId(c *core.Chainsql) {
-	txHash := "D549C16DF43B29FDDC7DE8C8A192F1356821E88284E8FCC982CD1572CD3A5699"
+	txHash := "D32B78699CF8395A5E868E961FCC5F6B2FAC8784DA45CD233D39EC16C6E9B68E"
 	ret, err := c.GetSchemaId(txHash)
 	log.Println(ret)
 	log.Println(err)
