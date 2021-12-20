@@ -78,8 +78,7 @@ func ValidationCreate() (string, error) {
 		log.Println(err)
 		return "", err
 	}
-	sequenceZero := uint32(0)
-	publicKey, _ := AccountPublicKey(key, &sequenceZero)
+	publicKey, _ := NodePublicKey(key)
 	generated := SeedKey{
 		Seed:      seed.String(),
 		PublicKey: publicKey.String(),

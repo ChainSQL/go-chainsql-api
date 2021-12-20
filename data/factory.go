@@ -47,6 +47,7 @@ const (
 	CONTRACT        TransactionType = 24
 	SCHEMA_CREATE   TransactionType = 25
 	SCHEMA_MODIFY   TransactionType = 26
+	SCHEMA_DELETE   TransactionType = 28
 	ACCOUNT_DELETE  TransactionType = 51
 	AMENDMENT       TransactionType = 100
 	SET_FEE         TransactionType = 101
@@ -94,6 +95,7 @@ var TxFactory = [...]func() Transaction{
 	CHECK_CANCEL:    func() Transaction { return &CheckCancel{TxBase: TxBase{TransactionType: CHECK_CANCEL}} },
 	SCHEMA_CREATE:   func() Transaction { return &SchemaCreate{TxBase: TxBase{TransactionType: SCHEMA_CREATE}} },
 	SCHEMA_MODIFY:   func() Transaction { return &SchemaModify{TxBase: TxBase{TransactionType: SCHEMA_MODIFY}} },
+	SCHEMA_DELETE:   func() Transaction { return &SchemaDelete{TxBase: TxBase{TransactionType: SCHEMA_DELETE}} },
 }
 
 var ledgerEntryNames = [...]string{
@@ -154,6 +156,7 @@ var txNames = [...]string{
 	CONTRACT:        "Contract",
 	SCHEMA_CREATE:   "SchemaCreate",
 	SCHEMA_MODIFY:   "SchemaModify",
+	SCHEMA_DELETE:   "SchemaDelete",
 }
 
 var txTypes = map[string]TransactionType{
@@ -182,6 +185,7 @@ var txTypes = map[string]TransactionType{
 	"Contract":             CONTRACT,
 	"SchemaCreate":         SCHEMA_CREATE,
 	"SchemaModify":         SCHEMA_MODIFY,
+	"SchemaDelete":         SCHEMA_DELETE,
 }
 
 var HashableTypes []string
