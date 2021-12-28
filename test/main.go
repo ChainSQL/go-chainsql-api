@@ -17,6 +17,10 @@ type Account struct {
 	secret  string
 }
 
+var root = Account{
+	address: "zHb9CJAWyB4zj91VRWn96DkukG4bwdtyTh",
+	secret:  "xnoPBzXtMeMyMHUVTgbuqAfg1SUTb",
+}
 var user1 = Account{
 	address: "zBonp9s7isAaDUPcfrFfYjNnhgeznoBHxF",
 	secret:  "xn2FhQLRQqhKJeNhpgMzp2PGAYbdw",
@@ -38,13 +42,14 @@ var tableName = "hello2"
 func main() {
 	c := core.NewChainsql()
 	//err := c.Connect("wss://zxlm-fgm.peersafe.cn/ws-zhu")
-	err := c.Connect("ws://10.100.0.78:25510")
-	//err := c.Connect("ws://localhost:5510")
+	//err := c.Connect("ws://192.168.177.106:6315")
+	//err := c.Connect("ws://10.100.0.78:25514")
+	err := c.Connect("ws://localhost:5510")
 	// log.Println("IsConnected:", c.IsConnected())
-	// if err != nil {
+	if err != nil {
 	log.Println(err)
-	// 	return
-	// }
+	 	return
+	}
 	// var root = Account{
 	// 	address: "zHb9CJAWyB4zj91VRWn96DkukG4bwdtyTh",
 	// 	secret:  "xnoPBzXtMeMyMHUVTgbuqAfg1SUTb",
@@ -52,7 +57,7 @@ func main() {
 	c.As(user1.address, user1.secret)
 	//c.As(smRoot.address, smRoot.secret)
 	//c.SetSchema("FE8AFDD1E0E4A70B3C5E6292A589ECD6C3021567C9E8A7823040E0913D33CFAA")
-	// c.As(root.address, root.secret)
+	//GenerateKey(rand.Reader)
 	// c.Use(root.address)
 
 	// // testSubLedger(c)
@@ -71,14 +76,15 @@ func main() {
 	//testGetServerInfo(c)
 	//testPay(c)
 	//testSchemaCreate(c) //创建子链
-	testSchemaModify(c)  // 修改子链
+	//testSchemaModify(c) // 修改子链
 	//testGetSchemaList(c) //获取子链列表
 	//testGetSchemaInfo(c) //依据子链id获取子链信息
-	//testStopSchema(c) //
+	testStopSchema(c) //
 	//testStartSchema(c)
 	//testGetTransaction(c)
 	//testGetSchemaId(c)
 	//testGenerateAddress(c)
+	// testDeleteSchema(c)
 	for {
 		time.Sleep(time.Second * 10)
 	}
@@ -266,35 +272,41 @@ func testPay(c *core.Chainsql) {
 }
 
 func testSchemaCreate(c *core.Chainsql) {
-	schemaInfo := "{\"SchemaName\":\"hello\",\"WithState\":false,\"SchemaAdmin\":\"zBonp9s7isAaDUPcfrFfYjNnhgeznoBHxF\",\"Validators\":[{\"Validator\":{\"PublicKey\":\"032AE5321413947612478BD8DF609ACCBB7EB07930404AE38F8FF48721D82C0D45\"}},{\"Validator\":{\"PublicKey\":\"0313FEF8C100B25A62E1428D0B414FD945B00F369E6735AD52AFBE3DB88D80AAE9\"}},{\"Validator\":{\"PublicKey\":\"030F9602B680A71D962111CC3EF9D27601EB9FEC7C3BA24BB4323D94C3A1CF9A04\"}},{\"Validator\":{\"PublicKey\":\"02221A8AA9228AD1199BE05AD64FC6A4625525FE8C9780FD68223C85168B58E738\"}}],\"PeerList\":[{\"Peer\":{\"Endpoint\":\"10.100.0.78:25410\"}},{\"Peer\":{\"Endpoint\":\"10.100.0.78:25411\"}},{\"Peer\":{\"Endpoint\":\"10.100.0.104:5410\"}},{\"Peer\":{\"Endpoint\":\"10.100.0.78:25412\"}}]}"
+	schemaInfo := "{\"SchemaName\":\"hello\",\"WithState\":true,\"SchemaAdmin\":\"zBonp9s7isAaDUPcfrFfYjNnhgeznoBHxF\",\"Validators\":[{\"Validator\":{\"PublicKey\":\"032AE5321413947612478BD8DF609ACCBB7EB07930404AE38F8FF48721D82C0D45\"}},{\"Validator\":{\"PublicKey\":\"0313FEF8C100B25A62E1428D0B414FD945B00F369E6735AD52AFBE3DB88D80AAE9\"}},{\"Validator\":{\"PublicKey\":\"030F9602B680A71D962111CC3EF9D27601EB9FEC7C3BA24BB4323D94C3A1CF9A04\"}},{\"Validator\":{\"PublicKey\":\"02221A8AA9228AD1199BE05AD64FC6A4625525FE8C9780FD68223C85168B58E738\"}}],\"PeerList\":[{\"Peer\":{\"Endpoint\":\"10.100.0.78:25410\"}},{\"Peer\":{\"Endpoint\":\"10.100.0.78:25411\"}},{\"Peer\":{\"Endpoint\":\"10.100.0.104:5410\"}},{\"Peer\":{\"Endpoint\":\"10.100.0.78:25412\"}}]}"
 	//schemaInfo := "{\"SchemaName\":\"hello\",\"WithState\":false,\"SchemaAdmin\":\"zBonp9s7isAaDUPcfrFfYjNnhgeznoBHxF\",\"Validators\":\"fhfhhfhfhfhfh\",\"PeerList\":[{\"Peer\":{\"Endpoint\":\"127.0.0.1:15125\"}},{\"Peer\":{\"Endpoint\":\"127.0.0.1:25125\"}},{\"Peer\":{\"Endpoint\":\"127.0.0.1:35125\"}}]}"
+	//schemaInfo := "{"SchemaName":"子链1","WithState":false,"SchemaAdmin":"zKTqp9kqJBag59YGmL7imH9RfukG6qVtfS","Validators":[{"Validator":{"PublicKey":"037B2D1B1C97A996B44A2FA25765DE5D937247840C960AC6E84D0E3AA8A718F96E"}},{"Validator":{"PublicKey":"038C4245389C8AB8C7665CA4002AEE75EF5D7EEB51A4410D48797BC74F275E9CC3"}},{"Validator":{"PublicKey":"0237788307F53E50D9F799F0D0ABD48258BC41D9418638BD51C481D1848E005443"}}],"PeerList":[{"Peer":{"Endpoint":"192.168.0.242:12260"}},{"Peer":{"Endpoint":"192.168.0.242:12264"}},{"Peer":{"Endpoint":"192.168.0.242:12269"}}]}"
 	ret := c.CreateSchema(schemaInfo).Submit("validate_success")
 	log.Println(ret)
 }
 
 func testSchemaModify(c *core.Chainsql) {
+<<<<<<< HEAD
 	schemaInfo := "{\"SchemaID\":\"365FAE1F7D8EC62203921F5DEA970DEED93AAE1E2CBE593F1EEDC0E48C4AA198\",\"Validators\":[{\"Validator\":{\"PublicKey\":\"02BD87A95F549ECF607D6AE3AEC4C95D0BFF0F49309B4E7A9F15B842EB62A8ED1B\"}}],\"PeerList\":[{\"Peer\":{\"Endpoint\":\"192.168.29.108:5125\"}}]}"
+=======
+	schemaInfo := "{\"SchemaID\":\"D82440A7C79F96E13C4A06C0E7A66421A541B0F03DB13CC1AB765284CC3C3786\",\"Validators\":[{\"Validator\":{\"PublicKey\":\"02BD87A95F549ECF607D6AE3AEC4C95D0BFF0F49309B4E7A9F15B842EB62A8ED1B\"}}],\"PeerList\":[{\"Peer\":{\"Endpoint\":\"192.168.29.108:5125\"}}]}"
+>>>>>>> 7be309c8647abc51ac4fa16cf1c27b8130531683
 	//schemaInfo := "{\"SchemaName\":\"hello\",\"WithState\":false,\"SchemaAdmin\":\"zBonp9s7isAaDUPcfrFfYjNnhgeznoBHxF\",\"Validators\":\"fhfhhfhfhfhfh\",\"PeerList\":[{\"Peer\":{\"Endpoint\":\"127.0.0.1:15125\"}},{\"Peer\":{\"Endpoint\":\"127.0.0.1:25125\"}},{\"Peer\":{\"Endpoint\":\"127.0.0.1:35125\"}}]}"
 	ret := c.ModifySchema("schema_add", schemaInfo).Submit("validate_success")
 	log.Println(ret)
 }
 
 func testGetSchemaList(c *core.Chainsql) {
-	param := ""
+	param := "{\"running\":false}"
+	//param := ""
 	ret, err := c.GetSchemaList(param)
 	log.Println(ret)
 	log.Println(err)
 }
 
 func testGetSchemaInfo(c *core.Chainsql) {
-	schemaID := "FE8AFDD1E0E4A70B3C5E6292A589ECD6C3021567C9E8A7823040E0913D33CFAA"
+	schemaID := "D82440A7C79F96E13C4A06C0E7A66421A541B0F03DB13CC1AB765284CC3C3786"
 	ret, err := c.GetSchemaInfo(schemaID)
 	log.Println(ret)
 	log.Println(err)
 }
 
 func testStopSchema(c *core.Chainsql) {
-	schemaID := "FE8AFDD1E0E4A70B3C5E6292A589ECD6C3021567C9E8A7823040E0913D33CFAA"
+	schemaID := "E01C18E29FB9BB9F63A2E5ED996CC33A5180245DAD9B859E6FE0DFC529F102E9"
 	ret, err := c.StopSchema(schemaID)
 	log.Println(ret)
 	log.Println(err)
@@ -315,12 +327,13 @@ func testGetTransaction(c *core.Chainsql) {
 }
 
 func testGetSchemaId(c *core.Chainsql) {
-	txHash := "D32B78699CF8395A5E868E961FCC5F6B2FAC8784DA45CD233D39EC16C6E9B68E"
+	txHash := "886A376DF2D44998FCC7D233F0648161E0F1261B94B1B50B3FCE438405BE4ACC"
 	ret, err := c.GetSchemaId(txHash)
 	log.Println(ret)
 	log.Println(err)
 }
 
+<<<<<<< HEAD
 func testGenerateAddress(c *core.Chainsql){
 	//option := ""
 	option := "{\"algorithm\":\"softGMAlg\", \"secret\":\"pwRdHmA4cSUKKtFyo4m2vhiiz5g6ym58Noo9dTsUU97mARNjevj\"}"
@@ -331,3 +344,10 @@ func testGenerateAddress(c *core.Chainsql){
 		log.Println(ret)
 	}
 }
+=======
+func testDeleteSchema(c *core.Chainsql) {
+	schemaID := "E9A409F307BBFF0373D991443C0B9ED06C07780579E077197F684202CBA9EB07"
+	ret := c.DeleteSchema(schemaID).Submit("validate_success")
+	log.Println(ret)
+}
+>>>>>>> 7be309c8647abc51ac4fa16cf1c27b8130531683

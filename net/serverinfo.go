@@ -58,7 +58,7 @@ func (s *ServerInfo) GetFieldInt(result string, field *int, fieldInJSON string) 
 	if err == nil {
 		*field = int(nValue)
 	} else if fieldInJSON == "ledger_index" {
-		log.Printf("GetFieldInt error for field %s:%s\n", fieldInJSON, result)
+		//log.Printf("GetFieldInt error for field %s:%s\n", fieldInJSON, result)
 	}
 }
 

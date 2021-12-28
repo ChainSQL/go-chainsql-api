@@ -117,9 +117,6 @@ func (c *Client) InitSubscription() {
 		},
 		Streams: []string{"ledger", "server"},
 	}
-	if c.SchemaID != "" {
-		subCmd.SchemaID = c.SchemaID
-	}
 	request := c.syncRequest(subCmd)
 
 	result, _, _, err := jsonparser.Get([]byte(request.Response.Value), "result")
@@ -313,9 +310,6 @@ func (c *Client) Submit(blob string) string {
 	req.ID = c.cmdIDs
 	req.Command = "submit"
 	req.TxBlob = blob
-	if c.SchemaID != "" {
-		req.SchemaID = c.SchemaID
-	}
 
 	request := c.syncRequest(req)
 
@@ -333,10 +327,7 @@ func (c *Client) SubscribeTx(hash string, callback export.Callback) {
 	req := Request{}
 	req.Command = "subscribe"
 	req.TxHash = hash
-	if c.SchemaID != "" {
-		req.SchemaID = c.SchemaID
-	}
-	c.asyncRequest(req)
+	c.syncRequest(&req)
 }
 
 //UnSubscribeTx subscribe a transaction by hash
@@ -350,10 +341,7 @@ func (c *Client) UnSubscribeTx(hash string) {
 	req := Request{}
 	req.Command = "unsubscribe"
 	req.TxHash = hash
-	if c.SchemaID != "" {
-		req.SchemaID = c.SchemaID
-	}
-	c.asyncRequest(req)
+	c.syncRequest(&req)
 }
 
 func (c *Client) GetTableData(dataJSON interface{}, bSql bool) (string, error) {
@@ -451,7 +439,10 @@ func (c *Client) sendRequest(request *Request) {
 	c.sendMsgChan <- request.JSON
 }
 
-func (c *Client) asyncRequest(v interface{}) {
+func (c *Client) asyncRequest(v common.IRequest) {
+	if c.SchemaID != "" {
+		v.SetSchemaID(c.SchemaID)
+	}
 	data, _ := json.Marshal(v)
 	c.sendMsgChan <- string(data)
 }
@@ -567,7 +558,7 @@ func (c *Client) StartSchema(schemaID string) (string, error) {
 	return request.Response.Value, nil
 }
 
-func (c *Client) Unsubscribe(schemaID string) (string, error) {
+func (c *Client) Unsubscribe() (string, error) {
 	type Unsubscribe struct {
 		common.RequestBase
 		Streams []string `json:"streams"`

@@ -227,12 +227,14 @@ func (c *Chainsql) CreateSchema(schemaInfo string) *Chainsql {
 	}
 	if jsonObj.WithState {
 		//继承主链的节点状态
-		leadgerHash, errHash := NewHash256(jsonObj.AnchorLedgerHash)
-		if errHash != nil {
-			log.Println("CreateSchema ", errHash)
-		}
-		if leadgerHash != nil {
-			createSchema.AnchorLedgerHash = leadgerHash
+		if strings.Contains(schemaInfo, "AnchorLedgerHash") {
+			leadgerHash, errHash := NewHash256(jsonObj.AnchorLedgerHash)
+			if errHash != nil {
+				panic("Invalid schemaInfo parameter: AnchorLedgerHash")
+			}
+			if leadgerHash != nil {
+				createSchema.AnchorLedgerHash = leadgerHash
+			}
 		}
 		createSchema.SchemaStrategy = 2
 	} else {
@@ -263,9 +265,9 @@ func (c *Chainsql) CreateSchema(schemaInfo string) *Chainsql {
 }
 
 func (c *Chainsql) ModifySchema(schemaType string, schemaInfo string) *Chainsql {
-	StrContainers := strings.Contains(schemaInfo, "SchemaID") && strings.Contains(schemaInfo, "Validators") && strings.Contains(schemaInfo, "PeerList")
+	strContainers := strings.Contains(schemaInfo, "SchemaID") && strings.Contains(schemaInfo, "Validators") && strings.Contains(schemaInfo, "PeerList")
 
-	if !StrContainers {
+	if !strContainers {
 		panic("Invalid schemaInfo parameter")
 	}
 	var jsonObj ModifySchema
@@ -306,6 +308,23 @@ func (c *Chainsql) ModifySchema(schemaType string, schemaInfo string) *Chainsql 
 	return c
 }
 
+func (c *Chainsql) DeleteSchema(schemaID string) *Chainsql {
+	if schemaID == "" {
+		panic("Invalid parameter")
+	}
+	schemaDelete := &SchemaDelete{TxBase: TxBase{TransactionType: SCHEMA_DELETE}}
+	schemaIdHash, errHash := NewHash256(schemaID)
+	if errHash != nil {
+		log.Println("DeleteSchema ", errHash)
+		panic("Invalid parameter")
+	}
+	if schemaIdHash != nil {
+		schemaDelete.SchemaID = *schemaIdHash
+	}
+	c.op.Signer = schemaDelete
+	return c
+}
+
 func (c *Chainsql) GetSchemaList(params string) (string, error) {
 	return c.client.GetSchemaList(params)
 }
@@ -324,7 +343,7 @@ func (c *Chainsql) StartSchema(schemaID string) (string, error) {
 
 func (c *Chainsql) SetSchema(schemaId string) {
 	if c.client.SchemaID != schemaId {
-		c.client.Unsubscribe(schemaId)
+		c.client.Unsubscribe()
 		c.client.SchemaID = schemaId
 		c.client.InitSubscription()
 	}

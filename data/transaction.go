@@ -212,6 +212,11 @@ type SchemaModify struct {
 	SchemaID   Hash256
 }
 
+type SchemaDelete struct {
+	TxBase
+	SchemaID Hash256
+}
+
 func (txBase *TxBase) SetTxBase(seq uint32, fee Value, lastLedgerSequence *uint32, account Account) {
 	txBase.Sequence = seq
 	txBase.Fee = fee
