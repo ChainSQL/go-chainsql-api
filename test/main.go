@@ -33,8 +33,8 @@ var smRoot = Account{
 	address: "zN7TwUjJ899xcvNXZkNJ8eFFv2VLKdESsj",
 	secret:  "p97evg5Rht7ZB7DbEpVqmV3yiSBMxR3pRBKJyLcRWt7SL5gEeBb",
 }
-var smUser1 =Account{
-	secret:"pwRdHmA4cSUKKtFyo4m2vhiiz5g6ym58Noo9dTsUU97mARNjevj",
+var smUser1 = Account{
+	secret:  "pwRdHmA4cSUKKtFyo4m2vhiiz5g6ym58Noo9dTsUU97mARNjevj",
 	address: "zMXMtS2C36J1p3uhTxRFWV8pEhHa8AMMSL",
 }
 var tableName = "hello2"
@@ -47,8 +47,8 @@ func main() {
 	err := c.Connect("ws://localhost:5510")
 	// log.Println("IsConnected:", c.IsConnected())
 	if err != nil {
-	log.Println(err)
-	 	return
+		log.Println(err)
+		return
 	}
 	// var root = Account{
 	// 	address: "zHb9CJAWyB4zj91VRWn96DkukG4bwdtyTh",
@@ -280,11 +280,7 @@ func testSchemaCreate(c *core.Chainsql) {
 }
 
 func testSchemaModify(c *core.Chainsql) {
-<<<<<<< HEAD
 	schemaInfo := "{\"SchemaID\":\"365FAE1F7D8EC62203921F5DEA970DEED93AAE1E2CBE593F1EEDC0E48C4AA198\",\"Validators\":[{\"Validator\":{\"PublicKey\":\"02BD87A95F549ECF607D6AE3AEC4C95D0BFF0F49309B4E7A9F15B842EB62A8ED1B\"}}],\"PeerList\":[{\"Peer\":{\"Endpoint\":\"192.168.29.108:5125\"}}]}"
-=======
-	schemaInfo := "{\"SchemaID\":\"D82440A7C79F96E13C4A06C0E7A66421A541B0F03DB13CC1AB765284CC3C3786\",\"Validators\":[{\"Validator\":{\"PublicKey\":\"02BD87A95F549ECF607D6AE3AEC4C95D0BFF0F49309B4E7A9F15B842EB62A8ED1B\"}}],\"PeerList\":[{\"Peer\":{\"Endpoint\":\"192.168.29.108:5125\"}}]}"
->>>>>>> 7be309c8647abc51ac4fa16cf1c27b8130531683
 	//schemaInfo := "{\"SchemaName\":\"hello\",\"WithState\":false,\"SchemaAdmin\":\"zBonp9s7isAaDUPcfrFfYjNnhgeznoBHxF\",\"Validators\":\"fhfhhfhfhfhfh\",\"PeerList\":[{\"Peer\":{\"Endpoint\":\"127.0.0.1:15125\"}},{\"Peer\":{\"Endpoint\":\"127.0.0.1:25125\"}},{\"Peer\":{\"Endpoint\":\"127.0.0.1:35125\"}}]}"
 	ret := c.ModifySchema("schema_add", schemaInfo).Submit("validate_success")
 	log.Println(ret)
@@ -333,21 +329,19 @@ func testGetSchemaId(c *core.Chainsql) {
 	log.Println(err)
 }
 
-<<<<<<< HEAD
-func testGenerateAddress(c *core.Chainsql){
+func testGenerateAddress(c *core.Chainsql) {
 	//option := ""
 	option := "{\"algorithm\":\"softGMAlg\", \"secret\":\"pwRdHmA4cSUKKtFyo4m2vhiiz5g6ym58Noo9dTsUU97mARNjevj\"}"
 	ret, err := c.GenerateAddress(option)
 	if err != nil {
 		log.Println(err)
-	}else{
+	} else {
 		log.Println(ret)
 	}
 }
-=======
+
 func testDeleteSchema(c *core.Chainsql) {
 	schemaID := "E9A409F307BBFF0373D991443C0B9ED06C07780579E077197F684202CBA9EB07"
 	ret := c.DeleteSchema(schemaID).Submit("validate_success")
 	log.Println(ret)
 }
->>>>>>> 7be309c8647abc51ac4fa16cf1c27b8130531683
