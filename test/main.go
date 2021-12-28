@@ -25,6 +25,14 @@ var user2 = Account{
 	address: "zKXfeKXkTtLSTkEzaJyu2cRmRBFRvTW2zc",
 	secret:  "xhtBo8BLBZtTgc3LHnRspaFro5P4H",
 }
+var smRoot = Account{
+	address: "zN7TwUjJ899xcvNXZkNJ8eFFv2VLKdESsj",
+	secret:  "p97evg5Rht7ZB7DbEpVqmV3yiSBMxR3pRBKJyLcRWt7SL5gEeBb",
+}
+var smUser1 =Account{
+	secret:"pwRdHmA4cSUKKtFyo4m2vhiiz5g6ym58Noo9dTsUU97mARNjevj",
+	address: "zMXMtS2C36J1p3uhTxRFWV8pEhHa8AMMSL",
+}
 var tableName = "hello2"
 
 func main() {
@@ -41,8 +49,8 @@ func main() {
 	// 	address: "zHb9CJAWyB4zj91VRWn96DkukG4bwdtyTh",
 	// 	secret:  "xnoPBzXtMeMyMHUVTgbuqAfg1SUTb",
 	// }
-
 	c.As(user1.address, user1.secret)
+	//c.As(smRoot.address, smRoot.secret)
 	//c.SetSchema("FE8AFDD1E0E4A70B3C5E6292A589ECD6C3021567C9E8A7823040E0913D33CFAA")
 	// c.As(root.address, root.secret)
 	// c.Use(root.address)
@@ -63,14 +71,14 @@ func main() {
 	//testGetServerInfo(c)
 	//testPay(c)
 	//testSchemaCreate(c) //创建子链
-	//testSchemaModify(c)  // 修改子链
+	testSchemaModify(c)  // 修改子链
 	//testGetSchemaList(c) //获取子链列表
 	//testGetSchemaInfo(c) //依据子链id获取子链信息
 	//testStopSchema(c) //
 	//testStartSchema(c)
 	//testGetTransaction(c)
-	testGetSchemaId(c)
-
+	//testGetSchemaId(c)
+	//testGenerateAddress(c)
 	for {
 		time.Sleep(time.Second * 10)
 	}
@@ -253,7 +261,7 @@ func testGetServerInfo(c *core.Chainsql) {
 }
 
 func testPay(c *core.Chainsql) {
-	ret := c.Pay(user2.address, 30000000).Submit("validate_success")
+	ret := c.Pay(smUser1.address, 30000000).Submit("validate_success")
 	log.Println(ret)
 }
 
@@ -265,7 +273,7 @@ func testSchemaCreate(c *core.Chainsql) {
 }
 
 func testSchemaModify(c *core.Chainsql) {
-	schemaInfo := "{\"SchemaID\":\"6BA63B86E5CE48283D03CC21D3BE5F4630CC6572CE7F54982E5AE687C998B7A3\",\"Validators\":[{\"Validator\":{\"PublicKey\":\"02BD87A95F549ECF607D6AE3AEC4C95D0BFF0F49309B4E7A9F15B842EB62A8ED1B\"}}],\"PeerList\":[{\"Peer\":{\"Endpoint\":\"192.168.29.108:5125\"}}]}"
+	schemaInfo := "{\"SchemaID\":\"365FAE1F7D8EC62203921F5DEA970DEED93AAE1E2CBE593F1EEDC0E48C4AA198\",\"Validators\":[{\"Validator\":{\"PublicKey\":\"02BD87A95F549ECF607D6AE3AEC4C95D0BFF0F49309B4E7A9F15B842EB62A8ED1B\"}}],\"PeerList\":[{\"Peer\":{\"Endpoint\":\"192.168.29.108:5125\"}}]}"
 	//schemaInfo := "{\"SchemaName\":\"hello\",\"WithState\":false,\"SchemaAdmin\":\"zBonp9s7isAaDUPcfrFfYjNnhgeznoBHxF\",\"Validators\":\"fhfhhfhfhfhfh\",\"PeerList\":[{\"Peer\":{\"Endpoint\":\"127.0.0.1:15125\"}},{\"Peer\":{\"Endpoint\":\"127.0.0.1:25125\"}},{\"Peer\":{\"Endpoint\":\"127.0.0.1:35125\"}}]}"
 	ret := c.ModifySchema("schema_add", schemaInfo).Submit("validate_success")
 	log.Println(ret)
@@ -311,4 +319,15 @@ func testGetSchemaId(c *core.Chainsql) {
 	ret, err := c.GetSchemaId(txHash)
 	log.Println(ret)
 	log.Println(err)
+}
+
+func testGenerateAddress(c *core.Chainsql){
+	//option := ""
+	option := "{\"algorithm\":\"softGMAlg\", \"secret\":\"pwRdHmA4cSUKKtFyo4m2vhiiz5g6ym58Noo9dTsUU97mARNjevj\"}"
+	ret, err := c.GenerateAddress(option)
+	if err != nil {
+		log.Println(err)
+	}else{
+		log.Println(ret)
+	}
 }

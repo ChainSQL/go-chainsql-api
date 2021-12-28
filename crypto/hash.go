@@ -36,6 +36,17 @@ func NewRippleHashCheck(s string, version HashVersion) (Hash, error) {
 	return hash, nil
 }
 
+// Checks hash matches expected version
+func NewRippleSeed(s string, version HashVersion) (*Seed, error) {
+	keySeed := &Seed{}
+	hash, err := NewRippleHashCheck(s, version)
+	if err != nil {
+		return nil, err
+	}
+	keySeed.seedHash = hash
+	return keySeed, nil
+}
+
 func NewAccountId(b []byte) (Hash, error) {
 	return newHash(b, RIPPLE_ACCOUNT_ID)
 }

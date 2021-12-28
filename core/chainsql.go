@@ -140,6 +140,10 @@ func (c *Chainsql) GenerateAccount(args ...string) (string, error) {
 	}
 }
 
+func (c *Chainsql) GenerateAddress(options string) (string, error) {
+		return crypto.GenerateAddress(options)
+}
+
 //SignPlainData sign a plain text and return the signature
 func (c *Chainsql) SignPlainData(privateKey string, data string) (string, error) {
 	return util.SignPlainData(privateKey, data)

@@ -73,3 +73,7 @@ func (k *ecdsaKey) Public(sequence *uint32) []byte {
 }
 
 
+func (k *ecdsaKey) Type() KeyType  {
+	return ECDSA
+}
+

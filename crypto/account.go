@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 )
 
 //Account define the account format
@@ -20,6 +21,7 @@ type SeedKey struct {
 	PublicKey string `json:"publicKey"`
 }
 
+//生成特殊地址仍然使用此方法
 func GenerateAccount(args ...string) (string, error) {
 	var seed Hash
 	var err error
@@ -53,6 +55,66 @@ func GenerateAccount(args ...string) (string, error) {
 		PublicKey:    publicKey.String(),
 		PublicKeyHex: fmt.Sprintf("%X", key.Public(&sequenceZero)),
 		PrivateKey:   seed.String(),
+	}
+	jsonStr, err := json.Marshal(generated)
+	if err != nil {
+		return "", err
+	}
+	return string(jsonStr), nil
+}
+
+func GenerateAddress(options string) (string, error) {
+	var seed *Seed
+	var err error
+	var key Key
+	if strings.Contains(options, "algorithm") && !strings.Contains(options, "algorithm") {
+		return "", fmt.Errorf("Invalid parameter")
+	}
+	seed, err = GenerateSeed(options)
+	if err != nil {
+		return "", err
+	}
+	sVersion := seed.version
+	switch sVersion {
+	case "ed25519":
+		key, err = NewEd25519Key(seed.seedHash.Payload())
+		break
+	case "softGMAlg":
+		key, err = GenerateKeyPair(seed)
+		break
+	case "secp256k1":
+		key, err = NewECDSAKey(seed.seedHash.Payload())
+		break
+	default:
+		key, err = NewECDSAKey(seed.seedHash.Payload())
+	}
+
+	if err != nil {
+		return "", err
+	}
+	sequenceZero := uint32(0)
+	account, err := AccountId(key, &sequenceZero)
+	if err != nil {
+		return "", err
+	}
+	publicKey, err := AccountPublicKey(key, &sequenceZero)
+	if err != nil {
+		return "", err
+	}
+	var privateKey Hash
+	if sVersion != "" && (strings.Compare(sVersion, "softGMAlg") == 0) {
+		privateKey, err = AccountPrivateKey(key, &sequenceZero)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		privateKey = seed.seedHash
+	}
+	generated := Account{
+		Address:      account.String(),
+		PublicKey:    publicKey.String(),
+		PublicKeyHex: fmt.Sprintf("%X", key.Public(&sequenceZero)),
+		PrivateKey:   privateKey.String(),
 	}
 	jsonStr, err := json.Marshal(generated)
 	if err != nil {

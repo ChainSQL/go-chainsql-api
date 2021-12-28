@@ -21,6 +21,13 @@ const (
 	RIPPLE_ACCOUNT_PUBLIC  HashVersion = 35
 )
 
+// const (
+// 	ED25519 = 0
+// 	K256    = 1
+// 	SM      = 3
+// 	SOFT_SM = 4
+// )
+
 var hashTypes = [...]struct {
 	Description       string
 	Prefix            byte
@@ -31,6 +38,6 @@ var hashTypes = [...]struct {
 	RIPPLE_NODE_PUBLIC:     {"Validation public key for node.", 'n', 33, 53},
 	RIPPLE_NODE_PRIVATE:    {"Validation private key for node.", 'p', 32, 52},
 	RIPPLE_FAMILY_SEED:     {"Family seed.", 's', 16, 29},
-	RIPPLE_ACCOUNT_PRIVATE: {"Account private key.", 'p', 32, 52},
-	RIPPLE_ACCOUNT_PUBLIC:  {"Account public key.", 'a', 33, 53},
+	RIPPLE_ACCOUNT_PRIVATE: {"Account private key.", 'p', 65, 52},
+	RIPPLE_ACCOUNT_PUBLIC:  {"Account public key.", 'a', 65, 53},
 }

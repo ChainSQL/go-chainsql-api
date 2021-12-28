@@ -464,23 +464,23 @@ func (r *RegularKey) UnmarshalText(b []byte) error {
 	return nil
 }
 
-func (s Seed) MarshalText() ([]byte, error) {
-	address, err := s.Hash()
-	if err != nil {
-		return nil, err
-	}
-	return address.MarshalText()
-}
+// func (s Seed) MarshalText() ([]byte, error) {
+// 	address, err := s.Hash()
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return address.MarshalText()
+// }
 
 // Expects base58-encoded account id
-func (s *Seed) UnmarshalText(b []byte) error {
-	account, err := NewSeedFromAddress(string(b))
-	if err != nil {
-		return err
-	}
-	copy(s[:], account[:])
-	return nil
-}
+// func (s *Seed) UnmarshalText(b []byte, version crypto.HashVersion) error {
+// 	account, err := NewSeedFromAddress(string(b), version)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	copy(s[:], account[:])
+// 	return nil
+// }
 
 func (v VariableLength) MarshalText() ([]byte, error) {
 	return b2h(v), nil
@@ -497,12 +497,12 @@ func (p PublicKey) MarshalText() ([]byte, error) {
 	if p.IsZero() {
 		return []byte{}, nil
 	}
-	return b2h(p[:]), nil
+	return b2h(p.KeyValue[:]), nil
 }
 
 // Expects public key hex
 func (p *PublicKey) UnmarshalText(b []byte) error {
-	_, err := hex.Decode(p[:], b)
+	_, err := hex.Decode(p.KeyValue[:], b)
 	return err
 }
 

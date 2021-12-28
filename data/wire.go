@@ -140,7 +140,7 @@ func (a *Account) Marshal(w io.Writer) error {
 }
 
 func (k *PublicKey) Unmarshal(r Reader) error {
-	return readExpectedLength(r, k[:], "PublicKey")
+	return readExpectedLength(r, k.KeyValue[:], "PublicKey")
 }
 
 func (k *PublicKey) Marshal(w io.Writer) error {

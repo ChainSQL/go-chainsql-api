@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/ChainSQL/go-chainsql-api/crypto"
@@ -12,8 +13,13 @@ import (
 type KeyType int
 
 const (
-	ECDSA   KeyType = 0
-	Ed25519 KeyType = 1
+	ECDSA     KeyType = 0
+	Ed25519   KeyType = 1
+	SoftGMAlg KeyType = 2
+)
+const (
+	PUBKEY_LENGTH_GM     int = 65
+	PUBKEYL_ENGTH_COMMON int = 33
 )
 
 func (keyType KeyType) String() string {
@@ -32,15 +38,24 @@ type Hash160 [20]byte
 type Hash256 [32]byte
 type Vector256 []Hash256
 type VariableLength []byte
-type PublicKey [33]byte
+
+//type PublicKey [33]byte
+type PublicKey struct {
+	KeyStore [65]byte
+	KeyValue []byte
+	KeyType  KeyType
+}
+
 type Account [20]byte
 type RegularKey [20]byte
-type Seed [16]byte
+
+//type Seed [16]byte
 
 var zero256 Hash256
 var zeroAccount Account
-var zeroPublicKey PublicKey
-var zeroSeed Seed
+
+//var zeroPublicKey PublicKey
+//var zeroSeed Seed
 
 func (h *Hash128) Bytes() []byte {
 	if h == nil {
@@ -159,8 +174,17 @@ func (v *VariableLength) Bytes() []byte {
 	return []byte(nil)
 }
 
+func (p *PublicKey) SetKey(kType KeyType) {
+	p.KeyType = kType
+	if SoftGMAlg == kType {
+		p.KeyValue = p.KeyStore[:PUBKEY_LENGTH_GM]
+	} else {
+		p.KeyValue = p.KeyStore[:PUBKEYL_ENGTH_COMMON]
+	}
+
+}
 func (p PublicKey) NodePublicKey() string {
-	hash, err := crypto.NewNodePublicKey(p[:])
+	hash, err := crypto.NewNodePublicKey(p.KeyValue[:])
 	if err != nil {
 		return "Bad node public key"
 	}
@@ -173,12 +197,15 @@ func (p PublicKey) String() string {
 }
 
 func (p PublicKey) IsZero() bool {
-	return p == zeroPublicKey
+	if p.KeyValue == nil {
+		return true
+	}
+	return false
 }
 
 func (p *PublicKey) Bytes() []byte {
 	if p != nil {
-		return p[:]
+		return p.KeyValue[:]
 	}
 	return []byte(nil)
 }
@@ -266,63 +293,79 @@ func (r *RegularKey) Bytes() []byte {
 }
 
 // Expects address in base58 form
-func NewSeedFromAddress(s string) (*Seed, error) {
-	hash, err := crypto.NewRippleHashCheck(s, crypto.RIPPLE_FAMILY_SEED)
-	if err != nil {
-		return nil, err
-	}
-	var seed Seed
-	copy(seed[:], hash.Payload())
-	return &seed, nil
-}
+// func NewSeedFromAddress(s string, version crypto.HashVersion) (*Seed, error) {
+// 	keySeed := &Seed{}
+// 	hash, err := crypto.NewRippleHashCheck(s, version)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	keySeed.seedHash = hash
+// 	return keySeed, nil
+// }
 
-func (s Seed) Hash() (crypto.Hash, error) {
-	return crypto.NewFamilySeed(s[:])
-}
+// func (s *Seed) Hash() (crypto.Hash, error) {
+// 	return crypto.NewFamilySeed(s[:])
+// }
 
-func (s Seed) String() string {
-	address, err := s.Hash()
-	if err != nil {
-		return fmt.Sprintf("Bad Address: %s", b2h(s[:]))
-	}
-	return address.String()
-}
+// func (s Seed) String() string {
+// 	address, err := s.Hash()
+// 	if err != nil {
+// 		return fmt.Sprintf("Bad Address: %s", b2h(s[:]))
+// 	}
+// 	return address.String()
+// }
 
-func (s *Seed) Bytes() []byte {
-	if s != nil {
-		return s[:]
-	}
-	return []byte(nil)
-}
+// func (s *Seed) Bytes() []byte {
+// 	if s != nil {
+// 		return s[:]
+// 	}
+// 	return []byte(nil)
+// }
 
-func (s *Seed) Key(keyType KeyType) crypto.Key {
-	var (
-		key crypto.Key
-		err error
-	)
-	switch keyType {
-	case Ed25519:
-		key, err = crypto.NewEd25519Key(s[:])
-	case ECDSA:
-		key, err = crypto.NewECDSAKey(s[:])
-	}
-	if err != nil {
-		panic(fmt.Sprintf("bad seed: %v", err))
-	}
-	return key
-}
+// func (s *Seed) Key(keyType KeyType) crypto.Key {
+// 	var (
+// 		key crypto.Key
+// 		err error
+// 	)
+// 	switch keyType {
+// 	case Ed25519:
+// 		key, err = crypto.NewEd25519Key(s[:])
+// 	case ECDSA:
+// 		key, err = crypto.NewECDSAKey(s[:])
+// 	case SoftGMAlg:
+// 		key, err = crypto.GenerateKeyPairBySeed(s[:])
+// 	}
+// 	if err != nil {
+// 		panic(fmt.Sprintf("bad seed: %v", err))
+// 	}
+// 	return key
+// }
 
-func (s *Seed) AccountId(keyType KeyType, sequence *uint32) Account {
-	var account Account
-	copy(account[:], s.Key(keyType).Id(sequence))
-	return account
-}
+// func (s *Seed) AccountId(keyType KeyType, sequence *uint32) Account {
+// 	var account Account
+// 	copy(account[:], s.Key(keyType).Id(sequence))
+// 	return account
+// }
 
 func KeyFromSecret(secret string) (crypto.Key, error) {
-	seed, err := NewSeedFromAddress(secret)
-	if err != nil {
-		return nil, err
+	var version crypto.HashVersion
+	var err error
+	var seed *crypto.Seed
+	var regSoftGMSeed = "^[a-zA-Z1-9]{51,51}"
+	r := regexp.MustCompile(regSoftGMSeed)
+	if r.MatchString(secret) {
+		version = crypto.RIPPLE_ACCOUNT_PRIVATE
+		seed, err = crypto.NewRippleSeed(secret, version)
+		if err != nil {
+			return nil, err
+		}
+		return seed.GenerateKey(crypto.SoftGMAlg)
+	} else {
+		version = crypto.RIPPLE_FAMILY_SEED
+		seed, err := crypto.NewRippleSeed(secret, version)
+		if err != nil {
+			return nil, err
+		}
+		return seed.GenerateKey(crypto.ECDSA)
 	}
-
-	return seed.Key(ECDSA), nil
 }

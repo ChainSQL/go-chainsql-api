@@ -2,17 +2,20 @@ package crypto
 
 import (
 	"crypto/ed25519"
+	"encoding/hex"
 	"fmt"
 
 	"github.com/btcsuite/btcd/btcec"
 )
 
-func Sign(privateKey, hash, msg []byte) ([]byte, error) {
-	switch len(privateKey) {
-	case ed25519.PrivateKeySize:
-		return signEd25519(privateKey, msg)
-	case btcec.PrivKeyBytesLen:
-		return signECDSA(privateKey, hash)
+func Sign(key Key, hash []byte, sequence *uint32, msg []byte) ([]byte, error) {
+	switch key.Type() {
+	case Ed25519:
+		return signEd25519(key.Private(sequence), msg)
+	case ECDSA:
+		return signECDSA(key.Private(sequence), hash)
+	case SoftGMAlg:
+		return signSoftSM(key.Private(sequence), msg)
 	default:
 		return nil, fmt.Errorf("Unknown private key format")
 	}
@@ -67,4 +70,17 @@ func verifyECDSA(pubKey, signature, hash []byte) (bool, error) {
 		return false, nil
 	}
 	return sig.Verify(hash, pk), nil
+}
+
+func signSoftSM(privateKey, msg []byte) ([]byte, error) {
+	keyPair, err := PrivKeyFromBytes(privateKey)
+	if err != nil {
+		return nil, err
+	}
+	sign, err := SmSign(keyPair, msg)
+	if err != nil {
+		return nil, err
+	}
+	signByte, err := hex.DecodeString(sign) // 转码
+	return signByte, nil
 }

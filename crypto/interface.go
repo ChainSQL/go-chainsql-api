@@ -1,11 +1,14 @@
 package crypto
 
-import "math/big"
+import (
+	"math/big"
+)
 
 type Key interface {
 	Private(*uint32) []byte
 	Id(*uint32) []byte
 	Public(*uint32) []byte
+	Type() KeyType
 }
 
 type Hash interface {

@@ -31,6 +31,10 @@ func (e *ed25519key) Private(seq *uint32) []byte {
 	return e.priv[:]
 }
 
+func (k *ed25519key) Type() KeyType  {
+	return Ed25519
+}
+
 func NewEd25519Key(seed []byte) (*ed25519key, error) {
 	r := rand.Reader
 	if seed != nil {

@@ -252,9 +252,11 @@ func (t *TxBase) Compare(other *TxBase) int {
 // 	txInterface.SetSeq()
 
 // }
-func (t *TxBase) InitialiseForSigning() {
+func (t *TxBase) InitialiseForSigning(kType KeyType) {
 	if t.SigningPubKey == nil {
-		t.SigningPubKey = new(PublicKey)
+		pubkey := &PublicKey{}
+		pubkey.SetKey(kType)
+		t.SigningPubKey = pubkey
 	}
 	if t.TxnSignature == nil {
 		t.TxnSignature = new(VariableLength)

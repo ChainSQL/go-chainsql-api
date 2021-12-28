@@ -12,7 +12,7 @@ type Hashable interface {
 
 type Signer interface {
 	Hashable
-	InitialiseForSigning()
+	InitialiseForSigning(kType KeyType)
 	SigningPrefix() HashPrefix
 	GetPublicKey() *PublicKey
 	GetSignature() *VariableLength

@@ -35,11 +35,9 @@ func SignPlainData(privateKey string, data string) (string, error) {
 		return "", err
 	}
 	sequenceZero := uint32(0)
-	private := key.Private(&sequenceZero)
 	hash := crypto.Sha512Half([]byte(data))
-	sigBytes, err := crypto.Sign(private, hash, nil)
+	sigBytes, err := crypto.Sign(key, hash, &sequenceZero, nil)
 	if err != nil {
-		log.Println(err)
 		return "", err
 	}
 	return crypto.B2H(sigBytes), nil
