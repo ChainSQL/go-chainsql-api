@@ -27,7 +27,7 @@ func (p Proposal) SigningValues() []interface{} {
 	}
 }
 
-func (p Proposal) SuppressionId() (Hash256, error) {
+func (p Proposal) SuppressionId(keyType KeyType) (Hash256, error) {
 	return hashValues([]interface{}{
 		p.LedgerHash,
 		p.PreviousLedger,

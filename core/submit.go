@@ -83,8 +83,23 @@ func (s *SubmitBase) doSubmit() *TxResult {
 			ErrorMessage: err.Error(),
 		}
 	}
+	var algType KeyType
+	switch key.Type() {
+	case crypto.Ed25519:
+		algType = Ed25519
+		break
+	case crypto.ECDSA:
+		algType = ECDSA
+		break
+	case crypto.SoftGMAlg:
+		algType = SoftGMAlg
+		break
+	default:
+		algType = ECDSA
+	}
+
 	sequenceZero := uint32(0)
-	err = Sign(tx, key, &sequenceZero)
+	err = Sign(tx, key, &sequenceZero,algType)
 	if err != nil {
 		log.Printf("doSubmit error:%s\n", err)
 		return &TxResult{
@@ -93,7 +108,7 @@ func (s *SubmitBase) doSubmit() *TxResult {
 		}
 	}
 
-	_, blob, err := Raw(tx)
+	_, blob, err := Raw(tx, algType)
 	if err != nil {
 		log.Printf("doSubmit error:%s\n", err)
 		return &TxResult{

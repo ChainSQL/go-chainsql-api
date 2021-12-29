@@ -23,7 +23,7 @@ type Signer interface {
 
 type Router interface {
 	Hashable
-	SuppressionId() Hash256
+	SuppressionId(keyType KeyType) Hash256
 }
 
 type Storer interface {

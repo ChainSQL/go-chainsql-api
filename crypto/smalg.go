@@ -4,11 +4,10 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 
+	"strings"
+
 	"github.com/peersafe/gm-crypto/sm2"
 	"github.com/peersafe/gm-crypto/sm3"
-
-	//"github.com/ChainSQL/go-chainsql-api/data"
-	"strings"
 )
 
 type smKey struct {

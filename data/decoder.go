@@ -81,7 +81,7 @@ func ReadTransaction(r Reader) (Transaction, error) {
 
 // ReadTransactionAndMetadata combines the inputs from the two
 // readers into a TransactionWithMetaData
-func ReadTransactionAndMetadata(tx, meta Reader, hash Hash256, ledger uint32) (*TransactionWithMetaData, error) {
+func ReadTransactionAndMetadata(tx, meta Reader, hash Hash256, ledger uint32, keyType KeyType) (*TransactionWithMetaData, error) {
 	t, err := ReadTransaction(tx)
 	if err != nil {
 		return nil, err
@@ -95,7 +95,7 @@ func ReadTransactionAndMetadata(tx, meta Reader, hash Hash256, ledger uint32) (*
 		return nil, err
 	}
 	*txm.GetHash() = hash
-	if txm.Id, err = NodeId(txm); err != nil {
+	if txm.Id, err = NodeId(txm, keyType); err != nil {
 		return nil, err
 	}
 	return txm, nil

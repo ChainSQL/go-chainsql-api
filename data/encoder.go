@@ -4,47 +4,54 @@ import (
 	"bytes"
 	"crypto/sha512"
 	"fmt"
+	"github.com/peersafe/gm-crypto/sm3"
+	"hash"
 	"io"
 	"reflect"
 	"sort"
 	"strings"
 )
 
-func Raw(h Hashable) (Hash256, []byte, error) {
-	return raw(h, h.Prefix(), false)
+func Raw(h Hashable, keyType KeyType) (Hash256, []byte, error) {
+	return raw(h, h.Prefix(), false, keyType)
 }
 
-func NodeId(h Hashable) (Hash256, error) {
-	nodeid, _, err := raw(h, h.Prefix(), false)
+func NodeId(h Hashable, keyType KeyType) (Hash256, error) {
+	nodeid, _, err := raw(h, h.Prefix(), false, keyType)
 	return nodeid, err
 }
 
-func SigningHash(s Signer) (Hash256, []byte, error) {
-	return raw(s, s.SigningPrefix(), true)
+func SigningHash(s Signer, keyType KeyType) (Hash256, []byte, error) {
+	return raw(s, s.SigningPrefix(), true, keyType)
 }
 
-func Node(h Storer) (Hash256, []byte, error) {
+func Node(h Storer, keyType KeyType) (Hash256, []byte, error, ) {
 	var header bytes.Buffer
 	for _, v := range []interface{}{h.Ledger(), h.Ledger(), h.NodeType(), h.Prefix()} {
 		if err := write(&header, v); err != nil {
 			return zero256, nil, err
 		}
 	}
-	key, value, err := raw(h, h.Prefix(), true)
+	key, value, err := raw(h, h.Prefix(), true, keyType)
 	if err != nil {
 		return zero256, nil, err
 	}
 	return key, append(header.Bytes(), value...), nil
 }
 
-func raw(value interface{}, prefix HashPrefix, ignoreSigningFields bool) (Hash256, []byte, error) {
+func raw(value interface{}, prefix HashPrefix, ignoreSigningFields bool, keyType KeyType) (Hash256, []byte, error) {
 	buf := new(bytes.Buffer)
-	hasher := sha512.New()
+	var hasher hash.Hash
+	if keyType == SoftGMAlg {
+		hasher = sm3.New()
+	}else {
+		hasher = sha512.New()
+	}
 	multi := io.MultiWriter(buf, hasher)
 	if err := write(hasher, prefix); err != nil {
 		return zero256, nil, err
 	}
-	if err := writeRaw(multi, value, ignoreSigningFields); err != nil {
+	if err := writeRaw(multi, value, ignoreSigningFields, keyType); err != nil {
 		return zero256, nil, err
 	}
 	var hash Hash256
@@ -53,7 +60,7 @@ func raw(value interface{}, prefix HashPrefix, ignoreSigningFields bool) (Hash25
 }
 
 // Disgusting node format and ordering handled here
-func writeRaw(w io.Writer, value interface{}, ignoreSigningFields bool) error {
+func writeRaw(w io.Writer, value interface{}, ignoreSigningFields bool, keyType KeyType) error {
 	switch v := value.(type) {
 	case *Ledger:
 		return write(w, v.LedgerHeader)
@@ -68,7 +75,7 @@ func writeRaw(w io.Writer, value interface{}, ignoreSigningFields bool) error {
 			return write(w, v)
 		}
 	case *TransactionWithMetaData:
-		txid, tx, err := Raw(v.Transaction)
+		txid, tx, err := Raw(v.Transaction, keyType)
 		if err != nil {
 			return err
 		}
