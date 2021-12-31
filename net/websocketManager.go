@@ -18,6 +18,7 @@ type WebsocketManager struct {
 	sendMsgChan   chan string
 	recvMsgChan   chan string
 	isAlive       bool
+	isClose       bool
 	timeout       int // used for reconnecting
 	muxRead       *sync.Mutex
 	muxWrite      *sync.Mutex
@@ -37,6 +38,7 @@ func NewWsClientManager(url string, timeout int) *WebsocketManager {
 		sendMsgChan:   sendChan,
 		recvMsgChan:   recvChan,
 		isAlive:       false,
+		isClose:       false,
 		timeout:       timeout,
 		muxRead:       new(sync.Mutex),
 		muxWrite:      new(sync.Mutex),
@@ -57,6 +59,7 @@ func (wsc *WebsocketManager) dail() error {
 		return err
 	}
 	wsc.isAlive = true
+	wsc.isClose = false
 	log.Printf("connecting to %s success!", wsc.url)
 	return nil
 }
@@ -73,6 +76,7 @@ func (wsc *WebsocketManager) Disconnect() error {
 		wsc.conn = nil
 	}
 
+	wsc.isClose = true
 	wsc.isAlive = false
 
 	wsc.muxConnect.Unlock()
@@ -150,7 +154,7 @@ func (wsc *WebsocketManager) close() {
 func (wsc *WebsocketManager) checkReconnect() {
 	go func() {
 		for {
-			if !wsc.isAlive {
+			if !wsc.isClose &&  !wsc.isAlive {
 				log.Println("checkReconnect ws disconnected,reconnect!")
 				wsc.muxConnect.Lock()
 				err := wsc.connectAndRun()
@@ -198,7 +202,7 @@ func (wsc *WebsocketManager) ReadChan() chan string {
 }
 
 func (wsc *WebsocketManager) IsConnected() bool {
-	return wsc.isAlive
+	return wsc.isAlive && !wsc.isClose
 }
 
 // func main() {
