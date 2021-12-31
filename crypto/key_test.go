@@ -18,8 +18,9 @@ func checkHash(h Hash, err error) string {
 	return h.String()
 }
 
-func checkSignature(c *C, privateKey, publicKey, hash, msg []byte) bool {
-	sig, err := Sign(privateKey, hash, msg)
+func checkSignature(c *C, key Key, publicKey, hash, msg []byte) bool {
+	sequenceZero := uint32(0)
+	sig, err := Sign(key, hash, &sequenceZero,msg)
 	c.Assert(err, IsNil)
 	ok, err := Verify(publicKey, hash, msg, sig)
 	c.Assert(err, IsNil)
@@ -76,11 +77,11 @@ func (s *KeySuite) TestRippledVectors(c *C) {
 
 	msg := []byte("Hello, nurse!")
 	hash := Sha512Half(msg)
-	c.Check(checkSignature(c, key.Private(nil), key.Public(nil), hash, msg), Equals, true)
-	c.Check(checkSignature(c, key.Private(&sequenceZero), key.Public(&sequenceZero), hash, msg), Equals, true)
-	c.Check(checkSignature(c, key.Private(&sequenceOne), key.Public(&sequenceOne), hash, msg), Equals, true)
-	c.Check(checkSignature(c, key.Private(&sequenceOne), key.Public(&sequenceZero), hash, msg), Equals, false)
-	c.Check(checkSignature(c, key.Private(&sequenceZero), key.Public(&sequenceOne), hash, msg), Equals, false)
+	c.Check(checkSignature(c, key, key.Public(nil), hash, msg), Equals, true)
+	c.Check(checkSignature(c, key, key.Public(&sequenceZero), hash, msg), Equals, true)
+	c.Check(checkSignature(c, key, key.Public(&sequenceOne), hash, msg), Equals, true)
+	c.Check(checkSignature(c, key, key.Public(&sequenceZero), hash, msg), Equals, false)
+	c.Check(checkSignature(c, key, key.Public(&sequenceOne), hash, msg), Equals, false)
 
 }
 

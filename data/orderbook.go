@@ -97,10 +97,10 @@ func defaultUint32(v *uint32) uint32 {
 	return *v
 }
 
-func (s *AccountOfferSlice) Add(offer *Offer) bool {
+func (s *AccountOfferSlice) Add(offer *Offer) (bool, error) {
 	quality, err := offer.TakerPays.Divide(offer.TakerGets)
 	if err != nil {
-		panic(fmt.Sprintf("impossible quality: %s %s", offer.TakerPays, offer.TakerGets))
+		return false, fmt.Errorf("impossible quality: %s %s", offer.TakerPays, offer.TakerGets)
 	}
 	o := AccountOffer{
 		Flags:      LedgerEntryFlag(defaultUint32((*uint32)(offer.Flags))),
@@ -114,14 +114,14 @@ func (s *AccountOfferSlice) Add(offer *Offer) bool {
 	switch {
 	case i == len(*s):
 		*s = append(*s, o)
-		return true
+		return true, nil
 	case (*s)[i].Sequence != *offer.Sequence:
 		*s = append(*s, AccountOffer{})
 		copy((*s)[i+1:], (*s)[i:])
 		(*s)[i] = o
-		return true
+		return true, nil
 	default:
-		return false
+		return false, nil
 	}
 }
 

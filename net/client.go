@@ -494,7 +494,7 @@ func (c *Client) GetSchemaList(params string) (string, error) {
 }
 func (c *Client) GetSchemaInfo(schemaID string) (string, error) {
 	if schemaID == "" {
-		panic("Invalid parameter")
+		return "", fmt.Errorf("Invalid parameter")
 	}
 	type getSchemaInfo struct {
 		common.RequestBase
@@ -516,7 +516,7 @@ func (c *Client) GetSchemaInfo(schemaID string) (string, error) {
 
 func (c *Client) StopSchema(schemaID string) (string, error) {
 	if schemaID == "" {
-		panic("Invalid parameter")
+		return "", fmt.Errorf("Invalid parameter")
 	}
 	type StopSchema struct {
 		common.RequestBase
@@ -538,7 +538,7 @@ func (c *Client) StopSchema(schemaID string) (string, error) {
 
 func (c *Client) StartSchema(schemaID string) (string, error) {
 	if schemaID == "" {
-		panic("Invalid parameter")
+		return "", fmt.Errorf("Invalid parameter")
 	}
 	type StartSchema struct {
 		common.RequestBase

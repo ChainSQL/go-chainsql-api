@@ -17,7 +17,10 @@ type Trade struct {
 }
 
 func newTrade(txm *TransactionWithMetaData, i int) (*Trade, error) {
-	_, final, previous, action := txm.MetaData.AffectedNodes[i].AffectedNode()
+	_, final, previous, action, err := txm.MetaData.AffectedNodes[i].AffectedNode()
+	if err != nil {
+		return nil, err
+	}
 	v, ok := final.(*Offer)
 	if !ok || action == Created {
 		return nil, nil

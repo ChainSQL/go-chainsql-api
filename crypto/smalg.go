@@ -3,6 +3,7 @@ package crypto
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 
 	"strings"
 
@@ -87,7 +88,7 @@ func leftPad(input string, num int) string {
 	if len([]byte(input)) >= num {
 		return input
 	}
-	length := num - len([]byte(input)) + 1
+	length := num - len([]byte(input))
 	a := make([]byte, length, length)
 	for i := 0; i < length; i++ {
 		a[i] = 0
@@ -103,7 +104,7 @@ func (k *smKey) Id(sequence *uint32) []byte {
 func (k *smKey) Private(sequence *uint32) []byte {
 	privateByte, err := hex.DecodeString(k.PrivateKey) // 转码
 	if err != nil {
-		panic("PrivateKey transcoding exception ")
+		fmt.Printf("PrivateKey transcoding exception ")
 	}
 	return privateByte
 }
@@ -112,7 +113,7 @@ func (k *smKey) Public(sequence *uint32) []byte {
 
 	pubkeyByte, err := hex.DecodeString(k.PublicKey)
 	if err != nil {
-		panic("PublicKey transcoding exception ")
+		fmt.Printf("PublicKey transcoding exception ")
 	}
 	return []byte(pubkeyByte)
 }

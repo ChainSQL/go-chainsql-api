@@ -45,6 +45,10 @@ func main() {
 	//err := c.Connect("ws://192.168.177.106:6315")
 	//err := c.Connect("ws://10.100.0.78:25514")
 	err := c.Connect("ws://localhost:5510")
+	//c.Disconnect()
+	if !c.IsConnected(){
+		return
+	}
 	// log.Println("IsConnected:", c.IsConnected())
 	if err != nil {
 		log.Println(err)
@@ -54,8 +58,8 @@ func main() {
 	// 	address: "zHb9CJAWyB4zj91VRWn96DkukG4bwdtyTh",
 	// 	secret:  "xnoPBzXtMeMyMHUVTgbuqAfg1SUTb",
 	// }
-	c.As(user1.address, user1.secret)
-	//c.As(smRoot.address, smRoot.secret)
+	//c.As(user1.address, user1.secret)
+	c.As(smRoot.address, smRoot.secret)
 	//c.SetSchema("FE8AFDD1E0E4A70B3C5E6292A589ECD6C3021567C9E8A7823040E0913D33CFAA")
 	//GenerateKey(rand.Reader)
 	// c.Use(root.address)
@@ -76,15 +80,15 @@ func main() {
 	//testGetServerInfo(c)
 	//testPay(c)
 	//testSchemaCreate(c) //创建子链
-	//testSchemaModify(c) // 修改子链
+	testSchemaModify(c) // 修改子链
 	//testGetSchemaList(c) //获取子链列表
 	//testGetSchemaInfo(c) //依据子链id获取子链信息
-	testStopSchema(c) //
+	//testStopSchema(c) //
 	//testStartSchema(c)
 	//testGetTransaction(c)
 	//testGetSchemaId(c)
 	//testGenerateAddress(c)
-	// testDeleteSchema(c)
+	//testDeleteSchema(c)
 	for {
 		time.Sleep(time.Second * 10)
 	}
@@ -272,15 +276,16 @@ func testPay(c *core.Chainsql) {
 }
 
 func testSchemaCreate(c *core.Chainsql) {
-	schemaInfo := "{\"SchemaName\":\"hello\",\"WithState\":true,\"SchemaAdmin\":\"zBonp9s7isAaDUPcfrFfYjNnhgeznoBHxF\",\"Validators\":[{\"Validator\":{\"PublicKey\":\"032AE5321413947612478BD8DF609ACCBB7EB07930404AE38F8FF48721D82C0D45\"}},{\"Validator\":{\"PublicKey\":\"0313FEF8C100B25A62E1428D0B414FD945B00F369E6735AD52AFBE3DB88D80AAE9\"}},{\"Validator\":{\"PublicKey\":\"030F9602B680A71D962111CC3EF9D27601EB9FEC7C3BA24BB4323D94C3A1CF9A04\"}},{\"Validator\":{\"PublicKey\":\"02221A8AA9228AD1199BE05AD64FC6A4625525FE8C9780FD68223C85168B58E738\"}}],\"PeerList\":[{\"Peer\":{\"Endpoint\":\"10.100.0.78:25410\"}},{\"Peer\":{\"Endpoint\":\"10.100.0.78:25411\"}},{\"Peer\":{\"Endpoint\":\"10.100.0.104:5410\"}},{\"Peer\":{\"Endpoint\":\"10.100.0.78:25412\"}}]}"
+	//schemaInfo := "{\"SchemaName\":\"hello\",\"WithState\":true,\"SchemaAdmin\":\"zBonp9s7isAaDUPcfrFfYjNnhgeznoBHxF\",\"Validators\":[{\"Validator\":{\"PublicKey\":\"032AE5321413947612478BD8DF609ACCBB7EB07930404AE38F8FF48721D82C0D45\"}},{\"Validator\":{\"PublicKey\":\"0313FEF8C100B25A62E1428D0B414FD945B00F369E6735AD52AFBE3DB88D80AAE9\"}},{\"Validator\":{\"PublicKey\":\"030F9602B680A71D962111CC3EF9D27601EB9FEC7C3BA24BB4323D94C3A1CF9A04\"}},{\"Validator\":{\"PublicKey\":\"02221A8AA9228AD1199BE05AD64FC6A4625525FE8C9780FD68223C85168B58E738\"}}],\"PeerList\":[{\"Peer\":{\"Endpoint\":\"10.100.0.78:25410\"}},{\"Peer\":{\"Endpoint\":\"10.100.0.78:25411\"}},{\"Peer\":{\"Endpoint\":\"10.100.0.104:5410\"}},{\"Peer\":{\"Endpoint\":\"10.100.0.78:25412\"}}]}"
 	//schemaInfo := "{\"SchemaName\":\"hello\",\"WithState\":false,\"SchemaAdmin\":\"zBonp9s7isAaDUPcfrFfYjNnhgeznoBHxF\",\"Validators\":\"fhfhhfhfhfhfh\",\"PeerList\":[{\"Peer\":{\"Endpoint\":\"127.0.0.1:15125\"}},{\"Peer\":{\"Endpoint\":\"127.0.0.1:25125\"}},{\"Peer\":{\"Endpoint\":\"127.0.0.1:35125\"}}]}"
 	//schemaInfo := "{"SchemaName":"子链1","WithState":false,"SchemaAdmin":"zKTqp9kqJBag59YGmL7imH9RfukG6qVtfS","Validators":[{"Validator":{"PublicKey":"037B2D1B1C97A996B44A2FA25765DE5D937247840C960AC6E84D0E3AA8A718F96E"}},{"Validator":{"PublicKey":"038C4245389C8AB8C7665CA4002AEE75EF5D7EEB51A4410D48797BC74F275E9CC3"}},{"Validator":{"PublicKey":"0237788307F53E50D9F799F0D0ABD48258BC41D9418638BD51C481D1848E005443"}}],"PeerList":[{"Peer":{"Endpoint":"192.168.0.242:12260"}},{"Peer":{"Endpoint":"192.168.0.242:12264"}},{"Peer":{"Endpoint":"192.168.0.242:12269"}}]}"
+	schemaInfo := "{\"SchemaName\":\"hello\",\"WithState\":true,\"SchemaAdmin\":\"zN7TwUjJ899xcvNXZkNJ8eFFv2VLKdESsj\",\"Validators\":[{\"Validator\":{\"PublicKey\":\"47F7288B41B45F49342FAC6B65EC529B5ED52F3DDD35140C53BB54A3A7D03F3E9166B0FD574F098F2F9E30526EC8293CE95D4956AD8EC02B34060F0709DCDEA3C5\"}},{\"Validator\":{\"PublicKey\":\"47594A1F76382A89A811B485E3B3414F18967C55A9A2BB90DF7EF36FFF5FDCB915B9C495D66ADEA79DAD97C897596F6FE093C7CDADF90BDD0C91B99D8D014C1B05\"}},{\"Validator\":{\"PublicKey\":\"47C45A7D125E49FDFF1DE6C08F738122FFDC7171E0F5AFA794D02198E35F7F1B1F07CE271CDBF9BA4DB94AA087BE4F59F2A15A60868BE4ACFA86D13B448CD06038\"}}],\"PeerList\":[{\"Peer\":{\"Endpoint\":\"192.168.177.109:5432\"}},{\"Peer\":{\"Endpoint\":\"192.168.177.109:5433\"}},{\"Peer\":{\"Endpoint\":\"192.168.177.109:5441\"}}]}"
 	ret := c.CreateSchema(schemaInfo).Submit("validate_success")
 	log.Println(ret)
 }
 
 func testSchemaModify(c *core.Chainsql) {
-	schemaInfo := "{\"SchemaID\":\"365FAE1F7D8EC62203921F5DEA970DEED93AAE1E2CBE593F1EEDC0E48C4AA198\",\"Validators\":[{\"Validator\":{\"PublicKey\":\"02BD87A95F549ECF607D6AE3AEC4C95D0BFF0F49309B4E7A9F15B842EB62A8ED1B\"}}],\"PeerList\":[{\"Peer\":{\"Endpoint\":\"192.168.29.108:5125\"}}]}"
+	schemaInfo := "{\"SchemaID\":\"7FD3709160453B7605AA5FFBCFD958A0FB4FA6E531B43C17F698EC935974E453\",\"Validators\":[{\"Validator\":{\"PublicKey\":\"02BD87A95F549ECF607D6AE3AEC4C95D0BFF0F49309B4E7A9F15B842EB62A8ED1B\"}}],\"PeerList\":[{\"Peer\":{\"Endpoint\":\"192.168.29.108:5125\"}}]}"
 	//schemaInfo := "{\"SchemaName\":\"hello\",\"WithState\":false,\"SchemaAdmin\":\"zBonp9s7isAaDUPcfrFfYjNnhgeznoBHxF\",\"Validators\":\"fhfhhfhfhfhfh\",\"PeerList\":[{\"Peer\":{\"Endpoint\":\"127.0.0.1:15125\"}},{\"Peer\":{\"Endpoint\":\"127.0.0.1:25125\"}},{\"Peer\":{\"Endpoint\":\"127.0.0.1:35125\"}}]}"
 	ret := c.ModifySchema("schema_add", schemaInfo).Submit("validate_success")
 	log.Println(ret)
@@ -323,7 +328,7 @@ func testGetTransaction(c *core.Chainsql) {
 }
 
 func testGetSchemaId(c *core.Chainsql) {
-	txHash := "886A376DF2D44998FCC7D233F0648161E0F1261B94B1B50B3FCE438405BE4ACC"
+	txHash := "1E1EA9E9936574D17646EE9801B72B106DB35D13923FE4357746AD2DD2135C78"
 	ret, err := c.GetSchemaId(txHash)
 	log.Println(ret)
 	log.Println(err)
@@ -341,7 +346,7 @@ func testGenerateAddress(c *core.Chainsql) {
 }
 
 func testDeleteSchema(c *core.Chainsql) {
-	schemaID := "E9A409F307BBFF0373D991443C0B9ED06C07780579E077197F684202CBA9EB07"
+	schemaID := "93B1CC615DD0645009248C6C11F9CDE81C123DFB0983528B5218A7C1B374DDBE"
 	ret := c.DeleteSchema(schemaID).Submit("validate_success")
 	log.Println(ret)
 }

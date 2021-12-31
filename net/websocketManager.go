@@ -154,16 +154,18 @@ func (wsc *WebsocketManager) close() {
 func (wsc *WebsocketManager) checkReconnect() {
 	go func() {
 		for {
-			if !wsc.isClose &&  !wsc.isAlive {
-				log.Println("checkReconnect ws disconnected,reconnect!")
-				wsc.muxConnect.Lock()
-				err := wsc.connectAndRun()
-				wsc.muxConnect.Unlock()
-				if err == nil && wsc.onReconnected != nil {
-					wsc.onReconnected()
+			if !wsc.isClose{
+				if !wsc.isAlive {
+					log.Println("checkReconnect ws disconnected,reconnect!")
+					wsc.muxConnect.Lock()
+					err := wsc.connectAndRun()
+					wsc.muxConnect.Unlock()
+					if err == nil && wsc.onReconnected != nil {
+						wsc.onReconnected()
+					}
 				}
+				time.Sleep(time.Second * time.Duration(wsc.timeout))
 			}
-			time.Sleep(time.Second * time.Duration(wsc.timeout))
 		}
 	}()
 }

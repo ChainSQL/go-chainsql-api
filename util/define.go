@@ -36,3 +36,11 @@ const (
 	SchemaAdd = "schema_add"
 	SchemaDel = "schema_del"
 )
+const (
+	OpTypeSchemaAdd = 1
+	OpTypeSchemaDel = 2
+)
+
+const (
+	Seqinterval = 20
+)

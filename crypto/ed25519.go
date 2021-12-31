@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/ed25519"
 	"crypto/rand"
+	"fmt"
 )
 
 type ed25519key struct {
@@ -12,7 +13,7 @@ type ed25519key struct {
 
 func checkSequenceIsNil(seq *uint32) {
 	if seq != nil {
-		panic("Ed25519 keys do not support account families")
+		fmt.Errorf("Ed25519 keys do not support account families")
 	}
 }
 
@@ -31,7 +32,7 @@ func (e *ed25519key) Private(seq *uint32) []byte {
 	return e.priv[:]
 }
 
-func (k *ed25519key) Type() KeyType  {
+func (k *ed25519key) Type() KeyType {
 	return Ed25519
 }
 
@@ -44,5 +45,6 @@ func NewEd25519Key(seed []byte) (*ed25519key, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &ed25519key{priv: priv}, nil
+	key := &ed25519key{priv: priv}
+	return key, nil
 }

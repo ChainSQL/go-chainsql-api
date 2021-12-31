@@ -2,7 +2,8 @@ package core
 
 import (
 	"fmt"
-	"log"
+	"github.com/buger/jsonparser"
+	"strconv"
 
 	. "github.com/ChainSQL/go-chainsql-api/data"
 	"github.com/ChainSQL/go-chainsql-api/net"
@@ -22,7 +23,8 @@ type Base struct {
 
 //TxInfo is the opearting details
 type TxInfo struct {
-	Signer Signer
+	Raw   string
+	TxType  TransactionType
 	Query  []interface{}
 }
 
@@ -66,6 +68,17 @@ func NewRipple(client *net.Client) *Ripple {
 }
 
 func (r *Ripple) Pay(accountId string, value int64) *Ripple {
+	r.op.TxType = PAYMENT
+
+	r.op.Raw = "{\"AccountId\": \"" + accountId +  "\", \"Value\": \"" + strconv.FormatInt(value,10) + "\"}"
+	return r
+}
+
+func (r *Ripple) pay(raw string) (Signer, error) {
+	accountId, _ := jsonparser.GetString([]byte(raw), "AccountId")
+	strValue, _ := jsonparser.GetString([]byte(raw), "Value")
+	value, _ := strconv.ParseInt(strValue, 10, 64)
+
 	valueTemp, _ := NewNativeValue(value)
 	currency_zxc, _ := NewCurrency("ZXC")
 	amount := Amount{
@@ -75,7 +88,7 @@ func (r *Ripple) Pay(accountId string, value int64) *Ripple {
 	return r.PayToNode(accountId, amount)
 }
 
-func (r *Ripple) PayToNode(accountId string, amount Amount) *Ripple {
+func (r *Ripple) PayToNode(accountId string, amount Amount) (Signer, error) {
 
 	// if !amount.Currency.IsNative() {
 	// 	accountData, err := r.client.GetAccountInfo(string(amount.Issuer))
@@ -114,7 +127,7 @@ func (r *Ripple) PayToNode(accountId string, amount Amount) *Ripple {
 	// }
 	destination, err := NewAccountFromAddress(accountId)
 	if err != nil {
-		log.Println(err)
+		return nil,err
 	}
 	payment := &Payment{
 		//SendMax:     nil,
@@ -124,23 +137,33 @@ func (r *Ripple) PayToNode(accountId string, amount Amount) *Ripple {
 	payment.TransactionType = PAYMENT
 	account, err := NewAccountFromAddress(r.client.Auth.Address)
 	if err != nil {
-		log.Println(err)
+		return nil, err
 	}
 	payment.Account = *account
 	seq, err := net.PrepareRipple(r.client)
 	if err != nil {
-		log.Println(err)
+		return nil, err
 	}
 	payment.Sequence = seq
 	valueTemp, _ := NewNativeValue(10)
 	payment.Fee = *valueTemp
-	r.op.Signer = payment
-	return r
+	var sign Signer = payment
+	return sign, nil
 }
 
 //PrepareTx prepare tx json for submit
 func (r *Ripple) PrepareTx() (Signer, error) {
-	tx := r.op.Signer
+	var tx Signer
+	var err error
+	switch r.op.TxType {
+	case PAYMENT:
+		tx, err = r.pay(r.op.Raw)
+		break
+	default:
+	}
+	if err != nil {
+		return nil, err
+	}
 	return tx, nil
 
 }

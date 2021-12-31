@@ -9,6 +9,7 @@ type Key interface {
 	Id(*uint32) []byte
 	Public(*uint32) []byte
 	Type() KeyType
+	//Hasher() Hash
 }
 
 type Hash interface {

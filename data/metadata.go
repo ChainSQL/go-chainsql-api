@@ -65,13 +65,17 @@ func (t *TransactionWithMetaData) NodeType() NodeType { return NT_TRANSACTION_NO
 func (t *TransactionWithMetaData) Ledger() uint32     { return t.LedgerSequence }
 func (t *TransactionWithMetaData) NodeId() *Hash256   { return &t.Id }
 
-func (t *TransactionWithMetaData) Affects(account Account) bool {
+func (t *TransactionWithMetaData) Affects(account Account) (bool, error) {
 	for _, effect := range t.MetaData.AffectedNodes {
-		if _, final, _, _ := effect.AffectedNode(); final.Affects(account) {
-			return true
+		_, final, _, _ , err:= effect.AffectedNode()
+		if err != nil{
+			return false,err
+		}
+		if  final.Affects(account) {
+			return true, nil
 		}
 	}
-	return false
+	return false, nil
 }
 
 func NewTransactionWithMetadata(typ TransactionType) *TransactionWithMetaData {
@@ -80,7 +84,7 @@ func NewTransactionWithMetadata(typ TransactionType) *TransactionWithMetaData {
 
 // AffectedNode returns the AffectedNode, the current LedgerEntry,
 // the previous LedgerEntry (which might be nil) and the LedgerEntryState
-func (effect *NodeEffect) AffectedNode() (*AffectedNode, LedgerEntry, LedgerEntry, LedgerEntryState) {
+func (effect *NodeEffect) AffectedNode() (*AffectedNode, LedgerEntry, LedgerEntry, LedgerEntryState, error) {
 	var (
 		node            *AffectedNode
 		final, previous LedgerEntry
@@ -96,11 +100,11 @@ func (effect *NodeEffect) AffectedNode() (*AffectedNode, LedgerEntry, LedgerEntr
 	case effect.ModifiedNode != nil && effect.ModifiedNode.FinalFields == nil:
 		node, final, state = effect.ModifiedNode, LedgerEntryFactory[effect.ModifiedNode.LedgerEntryType](), Modified
 	default:
-		panic(fmt.Sprintf("Unknown LedgerEntryState: %+v", effect))
+		return nil, nil, nil, Created, fmt.Errorf("Unknown LedgerEntryState: %+v", effect)
 	}
 	previous = node.PreviousFields
 	if previous == nil {
 		previous = LedgerEntryFactory[final.GetLedgerEntryType()]()
 	}
-	return node, final, previous, state
+	return node, final, previous, state, nil
 }

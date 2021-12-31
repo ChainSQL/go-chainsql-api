@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/ChainSQL/go-chainsql-api/crypto"
@@ -24,7 +23,9 @@ type Chainsql struct {
 
 //TxInfo is the opearting details
 type ChainsqlTxInfo struct {
-	Signer Signer
+	//Signer Signer
+	Raw   string
+	TxType  TransactionType
 	Query  []interface{}
 }
 
@@ -62,48 +63,7 @@ func (c *Chainsql) Use(owner string) {
 	c.client.Auth.Owner = owner
 }
 
-// PrepareTx prepare tx json for submit
-func (c *Chainsql) PrepareTx() (Signer, error) {
 
-	log.Println("Chainsql prepareTx")
-	tx := c.op.Signer
-	seq, err := net.PrepareRipple(c.client)
-	if err != nil {
-		log.Println(err)
-	}
-
-	var fee int64 = 10
-	var last uint32
-	if c.client.ServerInfo.Updated {
-		last = uint32(c.client.ServerInfo.LedgerIndex + 20)
-		fee = int64(c.client.ServerInfo.ComputeFee())
-	} else {
-		ledgerIndex, err := c.client.GetLedgerVersion()
-		if err != nil {
-			log.Println("Chainsql prepareTx ", err)
-		}
-		last = uint32(ledgerIndex + 20)
-		fee = 50
-	}
-
-	if c.op.Signer.GetRaw() != "" {
-		fee += util.GetExtraFee(c.op.Signer.GetRaw(), c.client.ServerInfo.DropsPerByte)
-	} else if c.op.Signer.GetStatements() != "" {
-		fee += util.GetExtraFee(c.op.Signer.GetStatements(), c.client.ServerInfo.DropsPerByte)
-	}
-
-	finalFee, err := NewNativeValue(fee)
-	if err != nil {
-		log.Println("Chainsql prepareTx", err)
-	}
-	account, err := NewAccountFromAddress(c.client.Auth.Address)
-	if err != nil {
-		log.Println("Chainsql prepareTx", err)
-		panic(err)
-	}
-	c.op.Signer.SetTxBase(seq, *finalFee, &last, *account)
-	return tx, nil
-}
 
 //Table create a new table object
 func (c *Chainsql) Table(name string) *Table {
@@ -203,24 +163,29 @@ func (c *Chainsql) Pay(accountId string, value int64) *Ripple {
 }
 
 func (c *Chainsql) CreateSchema(schemaInfo string) *Chainsql {
-	StrContainers := strings.Contains(schemaInfo, "SchemaName") && strings.Contains(schemaInfo, "WithState") &&
+	c.op.TxType = SCHEMA_CREATE
+	c.op.Raw = schemaInfo
+	return c
+}
+
+func (c *Chainsql) createSchema(schemaInfo string) (Signer, error) {
+	isValid := strings.Contains(schemaInfo, "SchemaName") && strings.Contains(schemaInfo, "WithState") &&
 		strings.Contains(schemaInfo, "Validators") && strings.Contains(schemaInfo, "PeerList")
 
-	if !StrContainers {
-		panic("Invalid schemaInfo parameter")
+	if !isValid {
+		fmt.Errorf("Invalid schemaInfo parameter")
 	}
 	createSchema := &SchemaCreate{TxBase: TxBase{TransactionType: SCHEMA_CREATE}}
 	var jsonObj CreateSchema
 	err := json.Unmarshal([]byte(schemaInfo), &jsonObj)
 	if err != nil {
-		log.Println("CreateSchema ", err)
-		panic(err)
+		return nil, err
 	}
 
 	createSchema.SchemaName = VariableLength(jsonObj.SchemaName)
 	account, err := NewAccountFromAddress(jsonObj.SchemaAdmin)
 	if err != nil {
-		log.Println(err)
+		return nil, err
 	}
 	if account != nil {
 		createSchema.SchemaAdmin = account
@@ -230,7 +195,7 @@ func (c *Chainsql) CreateSchema(schemaInfo string) *Chainsql {
 		if strings.Contains(schemaInfo, "AnchorLedgerHash") {
 			leadgerHash, errHash := NewHash256(jsonObj.AnchorLedgerHash)
 			if errHash != nil {
-				panic("Invalid schemaInfo parameter: AnchorLedgerHash")
+				return nil, fmt.Errorf("Invalid schemaInfo parameter: AnchorLedgerHash")
 			}
 			if leadgerHash != nil {
 				createSchema.AnchorLedgerHash = leadgerHash
@@ -241,7 +206,7 @@ func (c *Chainsql) CreateSchema(schemaInfo string) *Chainsql {
 		// 不继承主链的节点状态
 		createSchema.SchemaStrategy = 1
 		if strings.Contains(schemaInfo, "AnchorLedgerHash") {
-			panic("Field 'AnchorLedgerHash' is unnecessary")
+			return nil, fmt.Errorf("Field 'AnchorLedgerHash' is unnecessary")
 		}
 	}
 
@@ -259,28 +224,34 @@ func (c *Chainsql) CreateSchema(schemaInfo string) *Chainsql {
 	}
 
 	createSchema.PeerList = peerSlice
-	//createSchema.TransactionType = SCHEMA_CREATE
-	c.op.Signer = createSchema
+	var signer Signer = createSchema
+	return signer, nil
+}
+func (c *Chainsql) ModifySchema(schemaType string, schemaInfo string) *Chainsql {
+	c.op.TxType = SCHEMA_MODIFY
+	c.op.Raw = "{\"SchemaType\": \"" + schemaType +  "\", \"SchemaInfo\":" + schemaInfo + "}"
 	return c
 }
 
-func (c *Chainsql) ModifySchema(schemaType string, schemaInfo string) *Chainsql {
-	strContainers := strings.Contains(schemaInfo, "SchemaID") && strings.Contains(schemaInfo, "Validators") && strings.Contains(schemaInfo, "PeerList")
+func (c *Chainsql) modifySchema(raw string) (Signer, error) {
+	schemaType, _ := jsonparser.GetString([]byte(raw), "SchemaType")
+	result, _, _, _:= jsonparser.Get([]byte(raw), "SchemaInfo")
+	schemaInfo := string(result)
+	isValid := strings.Contains(schemaInfo, "SchemaID") && strings.Contains(schemaInfo, "Validators") && strings.Contains(schemaInfo, "PeerList")
 
-	if !strContainers {
-		panic("Invalid schemaInfo parameter")
+	if !isValid {
+		return nil, fmt.Errorf("Invalid schemaInfo parameter")
 	}
 	var jsonObj ModifySchema
-	err := json.Unmarshal([]byte(schemaInfo), &jsonObj)
-	if err != nil {
-		log.Println("CreateSchema ", err)
-		panic(err)
+	errUnmarshal := json.Unmarshal([]byte(schemaInfo), &jsonObj)
+	if errUnmarshal != nil {
+		return nil, errUnmarshal
 	}
 	schemaModify := &SchemaModify{TxBase: TxBase{TransactionType: SCHEMA_MODIFY}}
 	if schemaType == util.SchemaDel {
-		schemaModify.OpType = 2
+		schemaModify.OpType = util.OpTypeSchemaDel
 	} else {
-		schemaModify.OpType = 1
+		schemaModify.OpType = util.OpTypeSchemaAdd
 	}
 	validatorSlice := make([]ValidatorFormat, len(jsonObj.Validators))
 	for i := 0; i < len(jsonObj.Validators); i++ {
@@ -298,31 +269,36 @@ func (c *Chainsql) ModifySchema(schemaType string, schemaInfo string) *Chainsql 
 	schemaModify.PeerList = peerSlice
 	schemaIdHash, errHash := NewHash256(jsonObj.SchemaID)
 	if errHash != nil {
-		log.Println("CreateSchema ", errHash)
+		return nil, errHash
 	}
 	if schemaIdHash != nil {
 		schemaModify.SchemaID = *schemaIdHash
 	}
 	//schemaModify.TransactionType = SCHEMA_MODIFY
-	c.op.Signer = schemaModify
-	return c
+	var signer Signer = schemaModify
+	return signer, nil
 }
 
 func (c *Chainsql) DeleteSchema(schemaID string) *Chainsql {
+	c.op.TxType = SCHEMA_DELETE
+	c.op.Raw = schemaID
+	return c
+}
+
+func (c *Chainsql) deleteSchema(schemaID string) (Signer, error) {
 	if schemaID == "" {
-		panic("Invalid parameter")
+		return nil, fmt.Errorf("Invalid parameter")
 	}
 	schemaDelete := &SchemaDelete{TxBase: TxBase{TransactionType: SCHEMA_DELETE}}
 	schemaIdHash, errHash := NewHash256(schemaID)
 	if errHash != nil {
-		log.Println("DeleteSchema ", errHash)
-		panic("Invalid parameter")
+		return nil, errHash
 	}
 	if schemaIdHash != nil {
 		schemaDelete.SchemaID = *schemaIdHash
 	}
-	c.op.Signer = schemaDelete
-	return c
+	var signer Signer = schemaDelete
+	return signer, nil
 }
 
 func (c *Chainsql) GetSchemaList(params string) (string, error) {
@@ -351,7 +327,7 @@ func (c *Chainsql) SetSchema(schemaId string) {
 func (c *Chainsql) GetSchemaId(hash string) (string, error) {
 	response, _ := c.client.GetTransaction(hash)
 	if response == "" {
-		panic("Invalid parameter")
+		return "", fmt.Errorf("Transaction does not exist ")
 	}
 	schemaID := ""
 	flag := false
@@ -362,7 +338,6 @@ func (c *Chainsql) GetSchemaId(hash string) (string, error) {
 			if LedgerEntryType == "Schema" {
 				schemaID, _ = jsonparser.GetString([]byte(value), "CreatedNode", "LedgerIndex")
 				flag = true
-				fmt.Println(schemaID, flag)
 			}
 		}
 
@@ -370,8 +345,66 @@ func (c *Chainsql) GetSchemaId(hash string) (string, error) {
 	if flag {
 		return schemaID, nil
 	}
-	panic("Invalid parameter")
+	return "", fmt.Errorf("Invalid parameter")
 }
 func (c *Chainsql) GetTransaction(hash string) (string, error) {
 	return c.client.GetTransaction(hash)
+}
+
+
+// PrepareTx prepare tx json for submit
+func (c *Chainsql) PrepareTx() (Signer, error) {
+	var tx Signer
+	var err error
+	switch c.op.TxType {
+	case SCHEMA_CREATE:
+		tx, err = c.createSchema(c.op.Raw)
+		break
+	case SCHEMA_MODIFY:
+		tx, err = c.modifySchema(c.op.Raw)
+		break
+	case SCHEMA_DELETE:
+		tx, err = c.deleteSchema(c.op.Raw)
+		break
+	default:
+	}
+	if err != nil {
+		return nil, err
+	}
+	//tx := c.op.Signer
+	seq, err := net.PrepareRipple(c.client)
+	if err != nil {
+		return nil, err
+	}
+
+	var fee int64 = 10
+	var last uint32
+	if c.client.ServerInfo.Updated {
+		last = uint32(c.client.ServerInfo.LedgerIndex + util.Seqinterval)
+		fee = int64(c.client.ServerInfo.ComputeFee())
+	} else {
+		ledgerIndex, err := c.client.GetLedgerVersion()
+		if err != nil {
+			return nil, err
+		}
+		last = uint32(ledgerIndex + util.Seqinterval)
+		fee = 50
+	}
+
+	if tx.GetRaw() != "" {
+		fee += util.GetExtraFee(tx.GetRaw(), c.client.ServerInfo.DropsPerByte)
+	} else if tx.GetStatements() != "" {
+		fee += util.GetExtraFee(tx.GetStatements(), c.client.ServerInfo.DropsPerByte)
+	}
+
+	finalFee, err := NewNativeValue(fee)
+	if err != nil {
+		return nil, err
+	}
+	account, err := NewAccountFromAddress(c.client.Auth.Address)
+	if err != nil {
+		return nil, err
+	}
+	tx.SetTxBase(seq, *finalFee, &last, *account)
+	return tx, nil
 }

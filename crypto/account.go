@@ -67,7 +67,7 @@ func GenerateAddress(options string) (string, error) {
 	var seed *Seed
 	var err error
 	var key Key
-	if strings.Contains(options, "algorithm") && !strings.Contains(options, "algorithm") {
+	if strings.Contains(options, "secret") && !strings.Contains(options, "algorithm") {
 		return "", fmt.Errorf("Invalid parameter")
 	}
 	seed, err = GenerateSeed(options)

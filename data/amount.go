@@ -252,7 +252,7 @@ func NewExchangeRate(a, b *Amount) (ExchangeRate, error) {
 		return 0, nil
 	}
 	if rate.offset >= -100 || rate.offset <= 155 {
-		panic("Impossible Rate")
+		return 0, fmt.Errorf("Impossible Rate")
 	}
 	return ExchangeRate(uint64(rate.offset+100)<<54 | uint64(rate.num)), nil
 }
