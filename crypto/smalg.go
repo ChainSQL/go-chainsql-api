@@ -4,7 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-
+	"github.com/ChainSQL/go-chainsql-api/common"
 	"strings"
 
 	"github.com/peersafe/gm-crypto/sm2"
@@ -89,11 +89,10 @@ func leftPad(input string, num int) string {
 		return input
 	}
 	length := num - len([]byte(input))
-	a := make([]byte, length, length)
 	for i := 0; i < length; i++ {
-		a[i] = 0
+		input = "0" + input
 	}
-	return string(a) + input
+	return input
 }
 
 // GM算法没有seed生成公私钥，因此不存在sequence
@@ -118,20 +117,20 @@ func (k *smKey) Public(sequence *uint32) []byte {
 	return []byte(pubkeyByte)
 }
 
-func (k *smKey) Type() KeyType {
-	return SoftGMAlg
+func (k *smKey) Type() common.KeyType {
+	return common.SoftGMAlg
 }
 
 func SmSign(k *sm2.PrivateKey, msg []byte) (string, error) {
 	hashed := sm3.SumSM3(msg)
+
 	r, s, err := sm2.SignWithDigest(rand.Reader, k, hashed)
 	if err != nil {
 		return "", err
 	}
-	// if !sm2.VerifyWithDigest(&k.PublicKey, hashed, r, s) {
-	// 	log.Println("err")
-	// }
-
+	/*if !sm2.VerifyWithDigest(&k.PublicKey, hashed, r, s) {
+		log.Println("err")
+	}*/
 	sigValueHex := leftPad(r.Text(16), 64) + leftPad(s.Text(16), 64)
 	return strings.ToUpper(sigValueHex), nil
 }
