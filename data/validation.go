@@ -1,5 +1,9 @@
 package data
 
+import (
+	"github.com/ChainSQL/go-chainsql-api/common"
+)
+
 type Validation struct {
 	Hash             Hash256
 	Flags            uint32
@@ -21,6 +25,6 @@ func (v Validation) GetPublicKey() *PublicKey        { return &v.SigningPubKey }
 func (v Validation) GetSignature() *VariableLength   { return &v.Signature }
 func (v Validation) Prefix() HashPrefix              { return HP_VALIDATION }
 func (v Validation) SigningPrefix() HashPrefix       { return HP_VALIDATION }
-func (v Validation) SuppressionId(keyType KeyType) (Hash256, error) { return NodeId(&v, keyType) }
+func (v Validation) SuppressionId(keyType common.KeyType) (Hash256, error) { return NodeId(&v, keyType) }
 func (v Validation) GetHash() *Hash256               { return &v.Hash }
-func (v Validation) InitialiseForSigning(kType KeyType)           {}
+func (v Validation) InitialiseForSigning(kType common.KeyType)           {}

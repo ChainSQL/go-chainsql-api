@@ -5,6 +5,7 @@ import (
 	"crypto/ed25519"
 	"crypto/rand"
 	"fmt"
+	"github.com/ChainSQL/go-chainsql-api/common"
 )
 
 type ed25519key struct {
@@ -32,8 +33,8 @@ func (e *ed25519key) Private(seq *uint32) []byte {
 	return e.priv[:]
 }
 
-func (k *ed25519key) Type() KeyType {
-	return Ed25519
+func (k *ed25519key) Type() common.KeyType {
+	return common.Ed25519
 }
 
 func NewEd25519Key(seed []byte) (*ed25519key, error) {

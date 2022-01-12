@@ -5,16 +5,17 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"github.com/ChainSQL/go-chainsql-api/common"
 	"github.com/btcsuite/btcd/btcec"
 )
 
 func Sign(key Key, hash []byte, sequence *uint32, msg []byte) ([]byte, error) {
 	switch key.Type() {
-	case Ed25519:
+	case common.Ed25519:
 		return signEd25519(key.Private(sequence), msg)
-	case ECDSA:
+	case common.ECDSA:
 		return signECDSA(key.Private(sequence), hash)
-	case SoftGMAlg:
+	case common.SoftGMAlg:
 		return signSoftSM(key.Private(sequence), msg)
 	default:
 		return nil, fmt.Errorf("Unknown private key format")

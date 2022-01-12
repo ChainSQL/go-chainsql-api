@@ -518,6 +518,4 @@ func (h *Uint64Hex) UnmarshalText(b []byte) error {
 	return err
 }
 
-func (keyType KeyType) MarshalText() ([]byte, error) {
-	return []byte(keyType.String()), nil
-}
+

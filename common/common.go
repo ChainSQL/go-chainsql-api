@@ -1,5 +1,29 @@
 package common
 
+type KeyType int
+
+const (
+	ECDSA     KeyType = 0
+	Ed25519   KeyType = 1
+	SoftGMAlg KeyType = 2
+)
+
+func (keyType KeyType) String() string {
+	switch keyType {
+	case ECDSA:
+		return "ECDSA"
+	case Ed25519:
+		return "Ed25519"
+	default:
+		return "unknown key type"
+	}
+}
+
+func (keyType KeyType) MarshalText() ([]byte, error) {
+
+	return []byte(keyType.String()), nil
+}
+
 // Auth is the type with ws connection infomations
 type Auth struct {
 	Address string

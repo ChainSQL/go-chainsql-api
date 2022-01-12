@@ -7,31 +7,16 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/ChainSQL/go-chainsql-api/common"
 	"github.com/ChainSQL/go-chainsql-api/crypto"
 )
 
-type KeyType int
-
-const (
-	ECDSA     KeyType = 0
-	Ed25519   KeyType = 1
-	SoftGMAlg KeyType = 2
-)
 const (
 	PUBKEY_LENGTH_GM     int = 65
 	PUBKEYL_ENGTH_COMMON int = 33
 )
 
-func (keyType KeyType) String() string {
-	switch keyType {
-	case ECDSA:
-		return "ECDSA"
-	case Ed25519:
-		return "Ed25519"
-	default:
-		return "unknown key type"
-	}
-}
+
 
 type Hash128 [16]byte
 type Hash160 [20]byte
@@ -43,7 +28,7 @@ type VariableLength []byte
 type PublicKey struct {
 	KeyStore [65]byte
 	KeyValue []byte
-	KeyType  KeyType
+	KeyType  common.KeyType
 }
 
 type Account [20]byte
@@ -174,9 +159,9 @@ func (v *VariableLength) Bytes() []byte {
 	return []byte(nil)
 }
 
-func (p *PublicKey) SetKey(kType KeyType) {
+func (p *PublicKey) SetKey(kType common.KeyType) {
 	p.KeyType = kType
-	if SoftGMAlg == kType {
+	if common.SoftGMAlg == kType {
 		p.KeyValue = p.KeyStore[:PUBKEY_LENGTH_GM]
 	} else {
 		p.KeyValue = p.KeyStore[:PUBKEYL_ENGTH_COMMON]
@@ -359,13 +344,13 @@ func KeyFromSecret(secret string) (crypto.Key, error) {
 		if err != nil {
 			return nil, err
 		}
-		return seed.GenerateKey(crypto.SoftGMAlg)
+		return seed.GenerateKey(common.SoftGMAlg)
 	} else {
 		version = crypto.RIPPLE_FAMILY_SEED
 		seed, err := crypto.NewRippleSeed(secret, version)
 		if err != nil {
 			return nil, err
 		}
-		return seed.GenerateKey(crypto.ECDSA)
+		return seed.GenerateKey(common.ECDSA)
 	}
 }

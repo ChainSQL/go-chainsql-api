@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha512"
 	"fmt"
+	"github.com/ChainSQL/go-chainsql-api/common"
 	"github.com/peersafe/gm-crypto/sm3"
 	"hash"
 	"io"
@@ -12,20 +13,20 @@ import (
 	"strings"
 )
 
-func Raw(h Hashable, keyType KeyType) (Hash256, []byte, error) {
+func Raw(h Hashable, keyType common.KeyType) (Hash256, []byte, error) {
 	return raw(h, h.Prefix(), false, keyType)
 }
 
-func NodeId(h Hashable, keyType KeyType) (Hash256, error) {
+func NodeId(h Hashable, keyType common.KeyType) (Hash256, error) {
 	nodeid, _, err := raw(h, h.Prefix(), false, keyType)
 	return nodeid, err
 }
 
-func SigningHash(s Signer, keyType KeyType) (Hash256, []byte, error) {
+func SigningHash(s Signer, keyType common.KeyType) (Hash256, []byte, error) {
 	return raw(s, s.SigningPrefix(), true, keyType)
 }
 
-func Node(h Storer, keyType KeyType) (Hash256, []byte, error, ) {
+func Node(h Storer, keyType common.KeyType) (Hash256, []byte, error, ) {
 	var header bytes.Buffer
 	for _, v := range []interface{}{h.Ledger(), h.Ledger(), h.NodeType(), h.Prefix()} {
 		if err := write(&header, v); err != nil {
@@ -39,10 +40,10 @@ func Node(h Storer, keyType KeyType) (Hash256, []byte, error, ) {
 	return key, append(header.Bytes(), value...), nil
 }
 
-func raw(value interface{}, prefix HashPrefix, ignoreSigningFields bool, keyType KeyType) (Hash256, []byte, error) {
+func raw(value interface{}, prefix HashPrefix, ignoreSigningFields bool, keyType common.KeyType) (Hash256, []byte, error) {
 	buf := new(bytes.Buffer)
 	var hasher hash.Hash
-	if keyType == SoftGMAlg {
+	if keyType == common.SoftGMAlg {
 		hasher = sm3.New()
 	}else {
 		hasher = sha512.New()
@@ -60,7 +61,7 @@ func raw(value interface{}, prefix HashPrefix, ignoreSigningFields bool, keyType
 }
 
 // Disgusting node format and ordering handled here
-func writeRaw(w io.Writer, value interface{}, ignoreSigningFields bool, keyType KeyType) error {
+func writeRaw(w io.Writer, value interface{}, ignoreSigningFields bool, keyType common.KeyType) error {
 	switch v := value.(type) {
 	case *Ledger:
 		return write(w, v.LedgerHeader)

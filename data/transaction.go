@@ -1,5 +1,7 @@
 package data
 
+import "github.com/ChainSQL/go-chainsql-api/common"
+
 type TxBase struct {
 	TransactionType    TransactionType
 	Flags              *TransactionFlag `json:",omitempty"`
@@ -257,7 +259,7 @@ func (t *TxBase) Compare(other *TxBase) int {
 // 	txInterface.SetSeq()
 
 // }
-func (t *TxBase) InitialiseForSigning(kType KeyType) {
+func (t *TxBase) InitialiseForSigning(kType common.KeyType) {
 	if t.SigningPubKey == nil {
 		pubkey := &PublicKey{}
 		pubkey.SetKey(kType)

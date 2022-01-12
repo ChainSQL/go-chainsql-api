@@ -1,6 +1,7 @@
 package data
 
 import (
+	"github.com/ChainSQL/go-chainsql-api/common"
 	"io"
 )
 
@@ -12,7 +13,7 @@ type Hashable interface {
 
 type Signer interface {
 	Hashable
-	InitialiseForSigning(kType KeyType)
+	InitialiseForSigning(kType common.KeyType)
 	SigningPrefix() HashPrefix
 	GetPublicKey() *PublicKey
 	GetSignature() *VariableLength
@@ -23,7 +24,7 @@ type Signer interface {
 
 type Router interface {
 	Hashable
-	SuppressionId(keyType KeyType) Hash256
+	SuppressionId(keyType common.KeyType) Hash256
 }
 
 type Storer interface {

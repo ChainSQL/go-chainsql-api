@@ -43,11 +43,11 @@ func main() {
 	c := core.NewChainsql()
 	//err := c.Connect("wss://zxlm-fgm.peersafe.cn/ws-zhu")
 	//err := c.Connect("ws://192.168.177.106:6315")
-	//err := c.Connect("ws://10.100.0.78:25514")
-	err := c.Connect("ws://localhost:5510")
-	//c.Disconnect()
-	if !c.IsConnected(){
-		return
+	err := c.Connect("ws://10.100.0.78:6318")
+	//err := c.Connect("ws://localhost:5510")
+	//	c.Disconnect()
+	if !c.IsConnected() {
+		//return
 	}
 	// log.Println("IsConnected:", c.IsConnected())
 	if err != nil {
@@ -58,8 +58,8 @@ func main() {
 	// 	address: "zHb9CJAWyB4zj91VRWn96DkukG4bwdtyTh",
 	// 	secret:  "xnoPBzXtMeMyMHUVTgbuqAfg1SUTb",
 	// }
-	//c.As(user1.address, user1.secret)
-	c.As(smRoot.address, smRoot.secret)
+	c.As(root.address, root.secret)
+	//c.As(smRoot.address, smRoot.secret)
 	//c.SetSchema("FE8AFDD1E0E4A70B3C5E6292A589ECD6C3021567C9E8A7823040E0913D33CFAA")
 	//GenerateKey(rand.Reader)
 	// c.Use(root.address)
@@ -80,7 +80,7 @@ func main() {
 	//testGetServerInfo(c)
 	//testPay(c)
 	//testSchemaCreate(c) //创建子链
-	testSchemaModify(c) // 修改子链
+	//testSchemaModify(c) // 修改子链
 	//testGetSchemaList(c) //获取子链列表
 	//testGetSchemaInfo(c) //依据子链id获取子链信息
 	//testStopSchema(c) //
@@ -94,7 +94,7 @@ func main() {
 	}
 }
 
-func testGenerateAccount(c *core.Chainsql) {
+/*func testGenerateAccount(c *core.Chainsql) {
 	accStr, err := c.GenerateAccount()
 	if err != nil {
 		log.Println(err)
@@ -110,7 +110,7 @@ func testGenerateAccount(c *core.Chainsql) {
 		return
 	}
 	log.Println(accStr)
-}
+}*/
 
 func testInsert(c *core.Chainsql) {
 	var data = []byte(`[{"id":1,"name":"echo","age":18}]`)
@@ -285,15 +285,15 @@ func testSchemaCreate(c *core.Chainsql) {
 }
 
 func testSchemaModify(c *core.Chainsql) {
-	schemaInfo := "{\"SchemaID\":\"7FD3709160453B7605AA5FFBCFD958A0FB4FA6E531B43C17F698EC935974E453\",\"Validators\":[{\"Validator\":{\"PublicKey\":\"02BD87A95F549ECF607D6AE3AEC4C95D0BFF0F49309B4E7A9F15B842EB62A8ED1B\"}}],\"PeerList\":[{\"Peer\":{\"Endpoint\":\"192.168.29.108:5125\"}}]}"
+	schemaInfo := "{\"SchemaID\":\"6A0DBF953F9054ED15673139A8D8D243070CCF53A374B9235F9671C86598AE05\",\"Validators\":[{\"Validator\":{\"PublicKey\":\"471D5247096A08552746B5E321E925639A43D6A3ED5F48E48C678E1630F6B92F88EBE20579DCEF85371C43D7305787CAA9AADF7D705BDD1523BBCCF9865FEB34A4\"}}],\"PeerList\":[{\"Peer\":{\"Endpoint\":\"10.100.0.104:5410\"}}]}"
 	//schemaInfo := "{\"SchemaName\":\"hello\",\"WithState\":false,\"SchemaAdmin\":\"zBonp9s7isAaDUPcfrFfYjNnhgeznoBHxF\",\"Validators\":\"fhfhhfhfhfhfh\",\"PeerList\":[{\"Peer\":{\"Endpoint\":\"127.0.0.1:15125\"}},{\"Peer\":{\"Endpoint\":\"127.0.0.1:25125\"}},{\"Peer\":{\"Endpoint\":\"127.0.0.1:35125\"}}]}"
 	ret := c.ModifySchema("schema_add", schemaInfo).Submit("validate_success")
 	log.Println(ret)
 }
 
 func testGetSchemaList(c *core.Chainsql) {
-	param := "{\"running\":false}"
-	//param := ""
+	//param := "{\"running\":false}"
+	param := ""
 	ret, err := c.GetSchemaList(param)
 	log.Println(ret)
 	log.Println(err)
@@ -314,7 +314,7 @@ func testStopSchema(c *core.Chainsql) {
 }
 
 func testStartSchema(c *core.Chainsql) {
-	schemaID := "FE8AFDD1E0E4A70B3C5E6292A589ECD6C3021567C9E8A7823040E0913D33CFAA"
+	schemaID := "6A0DBF953F9054ED15673139A8D8D243070CCF53A374B9235F9671C86598AE05"
 	ret, err := c.StartSchema(schemaID)
 	log.Println(ret)
 	log.Println(err)
@@ -335,8 +335,9 @@ func testGetSchemaId(c *core.Chainsql) {
 }
 
 func testGenerateAddress(c *core.Chainsql) {
-	//option := ""
-	option := "{\"algorithm\":\"softGMAlg\", \"secret\":\"pwRdHmA4cSUKKtFyo4m2vhiiz5g6ym58Noo9dTsUU97mARNjevj\"}"
+	option := ""
+	//option := "{\"algorithm\":\"softGMAlg\", \"secret\":\"pwRdHmA4cSUKKtFyo4m2vhiiz5g6ym58Noo9dTsUU97mARNjevj\"}"
+	//option := "{\"algorithm\":\"ECDSA\", \"secret\":\"xnoPBzXtMeMyMHUVTgbuqAfg1SUTb\"}"
 	ret, err := c.GenerateAddress(option)
 	if err != nil {
 		log.Println(err)
@@ -346,7 +347,7 @@ func testGenerateAddress(c *core.Chainsql) {
 }
 
 func testDeleteSchema(c *core.Chainsql) {
-	schemaID := "93B1CC615DD0645009248C6C11F9CDE81C123DFB0983528B5218A7C1B374DDBE"
+	schemaID := "54C77F7E065FB5EDF3C7D0EF60627492CB626DC7F54654D9D46FB610129673A0"
 	ret := c.DeleteSchema(schemaID).Submit("validate_success")
 	log.Println(ret)
 }

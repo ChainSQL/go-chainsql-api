@@ -3,6 +3,7 @@ package data
 import (
 	"errors"
 	"fmt"
+	"github.com/ChainSQL/go-chainsql-api/common"
 	"reflect"
 )
 
@@ -81,7 +82,7 @@ func ReadTransaction(r Reader) (Transaction, error) {
 
 // ReadTransactionAndMetadata combines the inputs from the two
 // readers into a TransactionWithMetaData
-func ReadTransactionAndMetadata(tx, meta Reader, hash Hash256, ledger uint32, keyType KeyType) (*TransactionWithMetaData, error) {
+func ReadTransactionAndMetadata(tx, meta Reader, hash Hash256, ledger uint32, keyType common.KeyType) (*TransactionWithMetaData, error) {
 	t, err := ReadTransaction(tx)
 	if err != nil {
 		return nil, err

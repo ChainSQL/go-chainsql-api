@@ -48,7 +48,7 @@ func (s *ServerInfo) Update(result string) {
 	s.GetFieldInt(result, &s.TxnCount, "txn_count")
 	// s.GetFieldString(result, &s.Ledgerhash, "ledger_hash")
 	// s.GetFieldString(result, &s.ServerStatus, "server_status")
-	log.Printf("!!!!!!!!!!ServerUpdate ledger_index=%d\n", s.LedgerIndex)
+//	log.Printf("!!!!!!!!!!ServerUpdate ledger_index=%d\n", s.LedgerIndex)
 	s.Updated = true
 }
 

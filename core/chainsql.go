@@ -24,8 +24,8 @@ type Chainsql struct {
 //TxInfo is the opearting details
 type ChainsqlTxInfo struct {
 	//Signer Signer
-	Raw   string
-	TxType  TransactionType
+	Raw    string
+	TxType TransactionType
 	Query  []interface{}
 }
 
@@ -63,8 +63,6 @@ func (c *Chainsql) Use(owner string) {
 	c.client.Auth.Owner = owner
 }
 
-
-
 //Table create a new table object
 func (c *Chainsql) Table(name string) *Table {
 	return NewTable(name, c.client)
@@ -92,16 +90,16 @@ func (c *Chainsql) OnLedgerClosed(callback export.Callback) {
 //		"publicKeyHex":"02EA30B2A25844D4AFBAF6020DA9C9FED573AA0058791BFC8642E69888693CF8EA",
 //		"privateKey":"xniMQKhxZTMbfWb8scjRPXa5Zv6HB",
 // }
-func (c *Chainsql) GenerateAccount(args ...string) (string, error) {
+/*func (c *Chainsql) GenerateAccount(args ...string) (string, error) {
 	if len(args) == 0 {
 		return crypto.GenerateAccount()
 	} else {
 		return crypto.GenerateAccount(args[0])
 	}
-}
+}*/
 
 func (c *Chainsql) GenerateAddress(options string) (string, error) {
-		return crypto.GenerateAddress(options)
+	return crypto.GenerateAddress(options)
 }
 
 //SignPlainData sign a plain text and return the signature
@@ -141,6 +139,7 @@ func (c *Chainsql) IsConnected() bool {
 
 func (c *Chainsql) Disconnect() {
 	if c.client.GetWebocketManager() != nil {
+		c.client.Unsubscribe()
 		c.client.GetWebocketManager().Disconnect()
 	}
 }
@@ -168,7 +167,8 @@ func (c *Chainsql) CreateSchema(schemaInfo string) *Chainsql {
 	return c
 }
 
-func (c *Chainsql) createSchema(schemaInfo string) (Signer, error) {
+func (c *Chainsql) createSchema() (Signer, error) {
+	var schemaInfo = c.op.Raw
 	isValid := strings.Contains(schemaInfo, "SchemaName") && strings.Contains(schemaInfo, "WithState") &&
 		strings.Contains(schemaInfo, "Validators") && strings.Contains(schemaInfo, "PeerList")
 
@@ -229,13 +229,13 @@ func (c *Chainsql) createSchema(schemaInfo string) (Signer, error) {
 }
 func (c *Chainsql) ModifySchema(schemaType string, schemaInfo string) *Chainsql {
 	c.op.TxType = SCHEMA_MODIFY
-	c.op.Raw = "{\"SchemaType\": \"" + schemaType +  "\", \"SchemaInfo\":" + schemaInfo + "}"
+	c.op.Raw = "{\"SchemaType\": \"" + schemaType + "\", \"SchemaInfo\":" + schemaInfo + "}"
 	return c
 }
 
-func (c *Chainsql) modifySchema(raw string) (Signer, error) {
-	schemaType, _ := jsonparser.GetString([]byte(raw), "SchemaType")
-	result, _, _, _:= jsonparser.Get([]byte(raw), "SchemaInfo")
+func (c *Chainsql) modifySchema() (Signer, error) {
+	schemaType, _ := jsonparser.GetString([]byte(c.op.Raw), "SchemaType")
+	result, _, _, _ := jsonparser.Get([]byte(c.op.Raw), "SchemaInfo")
 	schemaInfo := string(result)
 	isValid := strings.Contains(schemaInfo, "SchemaID") && strings.Contains(schemaInfo, "Validators") && strings.Contains(schemaInfo, "PeerList")
 
@@ -285,7 +285,8 @@ func (c *Chainsql) DeleteSchema(schemaID string) *Chainsql {
 	return c
 }
 
-func (c *Chainsql) deleteSchema(schemaID string) (Signer, error) {
+func (c *Chainsql) deleteSchema() (Signer, error) {
+	var schemaID = c.op.Raw
 	if schemaID == "" {
 		return nil, fmt.Errorf("Invalid parameter")
 	}
@@ -351,26 +352,31 @@ func (c *Chainsql) GetTransaction(hash string) (string, error) {
 	return c.client.GetTransaction(hash)
 }
 
-
 // PrepareTx prepare tx json for submit
 func (c *Chainsql) PrepareTx() (Signer, error) {
 	var tx Signer
 	var err error
 	switch c.op.TxType {
 	case SCHEMA_CREATE:
-		tx, err = c.createSchema(c.op.Raw)
+		tx, err = c.createSchema()
 		break
 	case SCHEMA_MODIFY:
-		tx, err = c.modifySchema(c.op.Raw)
+		tx, err = c.modifySchema()
 		break
 	case SCHEMA_DELETE:
-		tx, err = c.deleteSchema(c.op.Raw)
+		tx, err = c.deleteSchema()
 		break
 	default:
 	}
 	if err != nil {
 		return nil, err
 	}
+
+	return c.prepareTxBase(tx)
+}
+
+func (c *Chainsql) prepareTxBase(tx Signer) (Signer, error) {
+
 	//tx := c.op.Signer
 	seq, err := net.PrepareRipple(c.client)
 	if err != nil {

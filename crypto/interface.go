@@ -1,6 +1,7 @@
 package crypto
 
 import (
+	"github.com/ChainSQL/go-chainsql-api/common"
 	"math/big"
 )
 
@@ -8,7 +9,7 @@ type Key interface {
 	Private(*uint32) []byte
 	Id(*uint32) []byte
 	Public(*uint32) []byte
-	Type() KeyType
+	Type() common.KeyType
 	//Hasher() Hash
 }
 

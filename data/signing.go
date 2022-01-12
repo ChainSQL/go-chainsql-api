@@ -1,13 +1,14 @@
 package data
 
 import (
+	"github.com/ChainSQL/go-chainsql-api/common"
 	"github.com/ChainSQL/go-chainsql-api/crypto"
 )
 
-func Sign(s Signer, key crypto.Key, sequence *uint32, algType KeyType) error {
-	s.InitialiseForSigning(algType)
+func Sign(s Signer, key crypto.Key, sequence *uint32, keyType common.KeyType) error {
+	s.InitialiseForSigning(key.Type())
 	copy(s.GetPublicKey().Bytes(), key.Public(sequence))
-	hash, msg, err := SigningHash(s, algType)
+	hash, msg, err := SigningHash(s, keyType)
 	if err != nil {
 		return err
 	}
@@ -16,7 +17,7 @@ func Sign(s Signer, key crypto.Key, sequence *uint32, algType KeyType) error {
 		return err
 	}
 	*s.GetSignature() = VariableLength(sig)
-	hash, _, err = Raw(s,algType)
+	hash, _, err = Raw(s,keyType)
 	if err != nil {
 		return err
 	}
@@ -24,7 +25,7 @@ func Sign(s Signer, key crypto.Key, sequence *uint32, algType KeyType) error {
 	return nil
 }
 
-func CheckSignature(s Signer, keyType KeyType) (bool, error) {
+func CheckSignature(s Signer, keyType common.KeyType) (bool, error) {
 	hash, msg, err := SigningHash(s, keyType)
 	if err != nil {
 		return false, err

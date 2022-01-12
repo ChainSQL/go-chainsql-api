@@ -5,6 +5,8 @@ import (
 	"encoding/binary"
 	"math/big"
 
+	"github.com/ChainSQL/go-chainsql-api/common"
+
 	"github.com/btcsuite/btcd/btcec"
 )
 
@@ -72,8 +74,6 @@ func (k *ecdsaKey) Public(sequence *uint32) []byte {
 	return k.generateKey(*sequence).PubKey().SerializeCompressed()
 }
 
-
-func (k *ecdsaKey) Type() KeyType  {
-	return ECDSA
+func (k *ecdsaKey) Type() common.KeyType {
+	return common.ECDSA
 }
-
