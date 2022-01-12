@@ -74,6 +74,8 @@ func (wsc *WebsocketManager) Disconnect() error {
 			return err
 		}
 		wsc.conn = nil
+		close(wsc.sendMsgChan)
+		close(wsc.recvMsgChan)
 	}
 
 	wsc.isClose = true
@@ -92,11 +94,16 @@ func (wsc *WebsocketManager) SetUrl(url string) {
 func (wsc *WebsocketManager) sendMsgThread() {
 	go func() {
 		for {
+			if wsc.isClose{
+				break
+			}
 			if wsc.isAlive {
 				msg := <-wsc.sendMsgChan
-
 				if wsc.conn != nil {
 					wsc.muxWrite.Lock()
+					if wsc.conn == nil || !wsc.isAlive{
+						break
+					}
 					// wsc.conn.SetWriteDeadline(time.Now().Add(time.Duration(wsc.timeout)))
 					err := wsc.conn.WriteMessage(websocket.TextMessage, []byte(msg))
 					wsc.muxWrite.Unlock()
@@ -123,11 +130,20 @@ func (wsc *WebsocketManager) OnReconnected(cb Reconnected) {
 func (wsc *WebsocketManager) readMsgThread() {
 	go func() {
 		for {
+			if wsc.isClose{
+				break
+			}
 			if wsc.conn != nil && wsc.isAlive {
 				wsc.muxRead.Lock()
+				if wsc.conn == nil || !wsc.isAlive{
+					break
+				}
 				_, message, err := wsc.conn.ReadMessage()
 				wsc.muxRead.Unlock()
 				if err != nil {
+					if wsc.conn == nil || !wsc.isAlive{
+						break
+					}
 					wsc.close()
 					log.Println("read:", err)
 					wsc.isAlive = false
@@ -154,18 +170,19 @@ func (wsc *WebsocketManager) close() {
 func (wsc *WebsocketManager) checkReconnect() {
 	go func() {
 		for {
-			if !wsc.isClose{
-				if !wsc.isAlive {
-					log.Println("checkReconnect ws disconnected,reconnect!")
-					wsc.muxConnect.Lock()
-					err := wsc.connectAndRun()
-					wsc.muxConnect.Unlock()
-					if err == nil && wsc.onReconnected != nil {
-						wsc.onReconnected()
-					}
-				}
-				time.Sleep(time.Second * time.Duration(wsc.timeout))
+			if wsc.isClose{
+				break
 			}
+			if !wsc.isAlive {
+				log.Println("checkReconnect ws disconnected,reconnect!")
+				wsc.muxConnect.Lock()
+				err := wsc.connectAndRun()
+				wsc.muxConnect.Unlock()
+				if err == nil && wsc.onReconnected != nil {
+					wsc.onReconnected()
+				}
+			}
+			time.Sleep(time.Second * time.Duration(wsc.timeout))
 		}
 	}()
 }
