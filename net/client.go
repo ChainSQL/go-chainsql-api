@@ -470,22 +470,39 @@ func (c *Client) GetServerInfo() (string, error) {
 func (c *Client) GetSchemaList(params string) (string, error) {
 	account, _ := jsonparser.GetString([]byte(params), "account")
 	running, _ := jsonparser.GetBoolean([]byte(params), "running")
+	type getRunSchemaList struct {
+		common.RequestBase
+		Account string `json:"account,omitempty"`
+		Running bool   `json:"running"`
+	}
 	type getSchemaList struct {
 		common.RequestBase
 		Account string `json:"account,omitempty"`
-		Running bool   `json:"running,omitempty"`
 	}
+
 	c.cmdIDs++
-	schemaListReq := &getSchemaList{}
-	schemaListReq.ID = c.cmdIDs
-	schemaListReq.Command = "schema_list"
-	if account != "" {
-		schemaListReq.Account = account
-	}
+	var request *Request
 	if strings.Contains(params, "running") {
+		schemaListReq := &getRunSchemaList{}
+		schemaListReq.ID = c.cmdIDs
+		schemaListReq.Command = "schema_list"
+		if account != "" {
+			schemaListReq.Account = account
+		}
 		schemaListReq.Running = running
+		request = c.syncRequest(schemaListReq)
+
+	}else{
+		schemaListReq := &getSchemaList{}
+		schemaListReq.ID = c.cmdIDs
+		schemaListReq.Command = "schema_list"
+		if account != "" {
+			schemaListReq.Account = account
+		}
+
+		request = c.syncRequest(schemaListReq)
 	}
-	request := c.syncRequest(schemaListReq)
+
 	err := c.parseResponseError(request)
 	if err != nil {
 		return "", err
