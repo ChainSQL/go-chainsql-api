@@ -51,11 +51,11 @@ func NewWsClientManager(url string, timeout int) *WebsocketManager {
 // 链接服务端
 func (wsc *WebsocketManager) dail() error {
 	var err error
-	log.Printf("connecting to %s", wsc.url)
+	//log.Printf("connecting to %s", wsc.url)
 	websocket.DefaultDialer.HandshakeTimeout = util.DIAL_TIMEOUT * time.Second
 	wsc.conn, _, err = websocket.DefaultDialer.Dial(wsc.url, nil)
 	if err != nil {
-		log.Printf("connecting to %s failed,err:%s", wsc.url, err.Error())
+		//log.Printf("connecting to %s failed,err:%s", wsc.url, err.Error())
 		return err
 	}
 	wsc.isAlive = true
@@ -174,7 +174,7 @@ func (wsc *WebsocketManager) checkReconnect() {
 				break
 			}
 			if !wsc.isAlive {
-				log.Println("checkReconnect ws disconnected,reconnect!")
+				//log.Println("checkReconnect ws disconnected,reconnect!")
 				wsc.muxConnect.Lock()
 				err := wsc.connectAndRun()
 				wsc.muxConnect.Unlock()
