@@ -23,8 +23,19 @@ type ecdsaKey struct {
 func newKey(seed []byte) *btcec.PrivateKey {
 	inc := big.NewInt(0).SetBytes(seed)
 	inc.Lsh(inc, 32)
+	accLen := len(seed) + 4
 	for key := big.NewInt(0); ; inc.Add(inc, one) {
-		key.SetBytes(Sha512Half(inc.Bytes()))
+		incBytes := inc.Bytes()
+
+		paddLen := accLen - len(incBytes)
+		finalBytes := make([]byte, accLen)
+		if paddLen != 0 {
+			tempBytes := make([]byte, paddLen)
+			finalBytes = append(tempBytes[:], incBytes[:]...)
+		} else {
+			finalBytes = incBytes
+		}
+		key.SetBytes(Sha512Half(finalBytes))
 		if key.Cmp(zero) > 0 && key.Cmp(order) < 0 {
 			privKey, _ := btcec.PrivKeyFromBytes(btcec.S256(), key.Bytes())
 			return privKey

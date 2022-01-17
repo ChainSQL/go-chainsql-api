@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
+	"github.com/ChainSQL/go-chainsql-api/common"
 	"log"
 	"strings"
 )
@@ -76,13 +77,13 @@ func GenerateAddress(options string) (string, error) {
 	}
 	sVersion := seed.version
 	switch sVersion {
-	case "ed25519":
+	case common.Ed25519:
 		key, err = NewEd25519Key(seed.seedHash.Payload())
 		break
-	case "softGMAlg":
+	case common.SoftGMAlg:
 		key, err = GenerateKeyPair(seed)
 		break
-	case "secp256k1":
+	case common.ECDSA:
 		key, err = NewECDSAKey(seed.seedHash.Payload())
 		break
 	default:
@@ -102,7 +103,7 @@ func GenerateAddress(options string) (string, error) {
 		return "", err
 	}
 	var privateKey Hash
-	if sVersion != "" && (strings.Compare(sVersion, "softGMAlg") == 0) {
+	if sVersion == common.SoftGMAlg {
 		privateKey, err = AccountPrivateKey(key, &sequenceZero)
 		if err != nil {
 			return "", err
