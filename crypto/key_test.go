@@ -20,7 +20,7 @@ func checkHash(h Hash, err error) string {
 
 func checkSignature(c *C, key Key, publicKey, hash, msg []byte) bool {
 	sequenceZero := uint32(0)
-	sig, err := Sign(key, hash, &sequenceZero,msg)
+	sig, err := Sign(key, hash, &sequenceZero, msg)
 	c.Assert(err, IsNil)
 	ok, err := Verify(publicKey, hash, msg, sig)
 	c.Assert(err, IsNil)
@@ -103,8 +103,8 @@ func (s *KeySuite) TestEd25119(c *C) {
 	msg := []byte("Hello, nurse!")
 	hash := Sha512Half(msg)
 
-	c.Check(checkSignature(c, key.Private(nil), key.Public(nil), hash, msg), Equals, true)
-	c.Check(checkSignature(c, other.Private(nil), other.Public(nil), hash, msg), Equals, true)
-	c.Check(checkSignature(c, key.Private(nil), other.Public(nil), hash, msg), Equals, false)
-	c.Check(checkSignature(c, other.Private(nil), key.Public(nil), hash, msg), Equals, false)
+	c.Check(checkSignature(c, key, key.Public(nil), hash, msg), Equals, true)
+	c.Check(checkSignature(c, other, other.Public(nil), hash, msg), Equals, true)
+	c.Check(checkSignature(c, key, other.Public(nil), hash, msg), Equals, false)
+	c.Check(checkSignature(c, other, key.Public(nil), hash, msg), Equals, false)
 }

@@ -10,6 +10,8 @@ type Key interface {
 	Id(*uint32) []byte
 	Public(*uint32) []byte
 	Type() common.KeyType
+	PK(*uint32) (interface{}, error)
+	PUB(*uint32) (interface{}, error)
 	//Hasher() Hash
 }
 

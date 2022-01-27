@@ -28,9 +28,19 @@ func (e *ed25519key) Public(seq *uint32) []byte {
 	return append([]byte{0xED}, e.priv[32:]...)
 }
 
+func (e *ed25519key) PUB(seq *uint32) (interface{}, error) {
+	checkSequenceIsNil(seq)
+	return append([]byte{0xED}, e.priv[32:]...), nil
+}
+
 func (e *ed25519key) Private(seq *uint32) []byte {
 	checkSequenceIsNil(seq)
 	return e.priv[:]
+}
+
+func (e *ed25519key) PK(seq *uint32) (interface{}, error) {
+	checkSequenceIsNil(seq)
+	return e.priv[:], nil
 }
 
 func (k *ed25519key) Type() common.KeyType {

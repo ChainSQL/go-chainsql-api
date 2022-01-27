@@ -78,11 +78,25 @@ func (k *ecdsaKey) Private(sequence *uint32) []byte {
 	return k.generateKey(*sequence).D.Bytes()
 }
 
+func (k *ecdsaKey) PK(sequence *uint32) (interface{}, error) {
+	if sequence == nil {
+		return k.PrivateKey, nil
+	}
+	return k.generateKey(*sequence), nil
+}
+
 func (k *ecdsaKey) Public(sequence *uint32) []byte {
 	if sequence == nil {
 		return k.PubKey().SerializeCompressed()
 	}
 	return k.generateKey(*sequence).PubKey().SerializeCompressed()
+}
+
+func (k *ecdsaKey) PUB(sequence *uint32) (interface{}, error) {
+	if sequence == nil {
+		return k.PublicKey, nil
+	}
+	return k.generateKey(*sequence).PublicKey, nil
 }
 
 func (k *ecdsaKey) Type() common.KeyType {
