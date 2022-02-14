@@ -1,6 +1,7 @@
 package crypto
 
 import (
+	"crypto/elliptic"
 	"crypto/rand"
 	"encoding/binary"
 	"math/big"
@@ -37,7 +38,10 @@ func newKey(seed []byte) *btcec.PrivateKey {
 		}
 		key.SetBytes(Sha512Half(finalBytes))
 		if key.Cmp(zero) > 0 && key.Cmp(order) < 0 {
-			privKey, _ := btcec.PrivKeyFromBytes(btcec.S256(), key.Bytes())
+			//elliptic.P256()
+			//elliptic.P256()
+			//privKey, _ := btcec.PrivKeyFromBytes(btcec.S256(), key.Bytes())
+			privKey, _ := btcec.PrivKeyFromBytes(elliptic.P256(), key.Bytes())
 			return privKey
 		}
 	}
@@ -79,10 +83,11 @@ func (k *ecdsaKey) Private(sequence *uint32) []byte {
 }
 
 func (k *ecdsaKey) PK(sequence *uint32) (interface{}, error) {
-	if sequence == nil {
-		return k.PrivateKey, nil
-	}
-	return k.generateKey(*sequence), nil
+	//if sequence == nil {
+	//	return k.PrivateKey, nil
+	//}
+	//return k.generateKey(*sequence), nil
+	return k.PrivateKey.ToECDSA(), nil
 }
 
 func (k *ecdsaKey) Public(sequence *uint32) []byte {
@@ -93,10 +98,11 @@ func (k *ecdsaKey) Public(sequence *uint32) []byte {
 }
 
 func (k *ecdsaKey) PUB(sequence *uint32) (interface{}, error) {
-	if sequence == nil {
-		return k.PublicKey, nil
-	}
-	return k.generateKey(*sequence).PublicKey, nil
+	//if sequence == nil {
+	//	return k.PublicKey, nil
+	//}
+	//return k.generateKey(*sequence).PublicKey, nil
+	return k.PublicKey, nil
 }
 
 func (k *ecdsaKey) Type() common.KeyType {

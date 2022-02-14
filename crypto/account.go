@@ -1,10 +1,12 @@
 package crypto
 
 import (
+	"crypto/ecdsa"
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"github.com/ChainSQL/go-chainsql-api/common"
+	"github.com/btcsuite/btcd/btcec"
 	"log"
 	"strings"
 )
@@ -53,13 +55,22 @@ func GenerateAccount(args ...string) (string, error) {
 	sequenceZero := uint32(0)
 	account, _ := AccountId(key, &sequenceZero)
 	publicKey, _ := AccountPublicKey(key, &sequenceZero)
+	pk, err := key.PK(&sequenceZero)
+	if err != nil {
+		return "", err
+	}
+
+	pub, err := key.PUB(&sequenceZero)
+	if err != nil {
+		return "", err
+	}
 	generated := Account{
 		Address:         account.String(),
 		PublicKeyBase58: publicKey.String(),
 		PublicKeyHex:    fmt.Sprintf("%X", key.Public(&sequenceZero)),
 		PrivateSeed:     seed.String(),
-		PrivateKey:      key.PK(&sequenceZero),
-		PublicKey:       key.PUB(&sequenceZero),
+		PrivateKey:      pk,
+		PublicKey:       pub,
 	}
 	jsonStr, err := json.Marshal(generated)
 	if err != nil {
@@ -115,19 +126,102 @@ func GenerateAddress(options string) (string, error) {
 	} else {
 		privSeed = seed.seedHash
 	}
+	pk, err := key.PK(&sequenceZero)
+	if err != nil {
+		return "", err
+	}
+
+	pub, err := key.PUB(&sequenceZero)
+	if err != nil {
+		return "", err
+	}
+
 	generated := Account{
 		Address:         account.String(),
 		PublicKeyBase58: publicKey.String(),
 		PublicKeyHex:    fmt.Sprintf("%X", key.Public(&sequenceZero)),
 		PrivateSeed:     privSeed.String(),
-		PrivateKey:      key.PK(&sequenceZero),
-		PublicKey:       key.PUB(&sequenceZero),
+		PrivateKey:      pk,
+		PublicKey:       pub,
 	}
+
+	pI := generated.PrivateKey.(*btcec.PrivateKey)
+	puI := generated.PublicKey.(ecdsa.PublicKey)
+	fmt.Printf("PI : %v\n", *pI)
+	fmt.Printf("PUI : %v\n", puI)
+
 	jsonStr, err := json.Marshal(generated)
 	if err != nil {
 		return "", err
 	}
 	return string(jsonStr), nil
+}
+
+func GenerateAddressObj(options string) (*Account, error) {
+	var seed *Seed
+	var err error
+	var key Key
+	if strings.Contains(options, "secret") && !strings.Contains(options, "algorithm") {
+		return nil, fmt.Errorf("Invalid parameter")
+	}
+	seed, err = GenerateSeed(options)
+	if err != nil {
+		return nil, err
+	}
+	sVersion := seed.version
+	switch sVersion {
+	case common.Ed25519:
+		key, err = NewEd25519Key(seed.seedHash.Payload())
+		break
+	case common.SoftGMAlg:
+		key, err = GenerateKeyPair(seed)
+		break
+	case common.ECDSA:
+		key, err = NewECDSAKey(seed.seedHash.Payload())
+		break
+	default:
+		key, err = NewECDSAKey(seed.seedHash.Payload())
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	sequenceZero := uint32(0)
+	account, err := AccountId(key, &sequenceZero)
+	if err != nil {
+		return nil, err
+	}
+	publicKey, err := AccountPublicKey(key, &sequenceZero)
+	if err != nil {
+		return nil, err
+	}
+	var privSeed Hash
+	if sVersion == common.SoftGMAlg {
+		privSeed, err = AccountPrivateKey(key, &sequenceZero)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		privSeed = seed.seedHash
+	}
+	pk, err := key.PK(&sequenceZero)
+	if err != nil {
+		return nil, err
+	}
+
+	pub, err := key.PUB(&sequenceZero)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Account{
+		Address:         account.String(),
+		PublicKeyBase58: publicKey.String(),
+		PublicKeyHex:    fmt.Sprintf("%X", key.Public(&sequenceZero)),
+		PrivateSeed:     privSeed.String(),
+		PrivateKey:      pk,
+		PublicKey:       pub,
+	}, nil
 }
 
 func ValidationCreate() (string, error) {
