@@ -104,10 +104,10 @@ func GenerateAddress(options string) (string, error) {
 	default:
 		key, err = NewECDSAKey(seed.seedHash.Payload())
 	}
-
 	if err != nil {
 		return "", err
 	}
+
 	sequenceZero := uint32(0)
 	account, err := AccountId(key, &sequenceZero)
 	if err != nil {
@@ -186,30 +186,31 @@ func GenerateAddressObj(options string) (*Account, error) {
 	if err != nil {
 		return nil, err
 	}
-	sequenceZero := uint32(0)
-	account, err := AccountId(key, &sequenceZero)
+
+	//account, err := AccountId(key, &sequenceZero)
+	account, err := AccountId(key, nil)
 	if err != nil {
 		return nil, err
 	}
-	publicKey, err := AccountPublicKey(key, &sequenceZero)
+	publicKey, err := AccountPublicKey(key, nil)
 	if err != nil {
 		return nil, err
 	}
 	var privSeed Hash
 	if sVersion == common.SoftGMAlg {
-		privSeed, err = AccountPrivateKey(key, &sequenceZero)
+		privSeed, err = AccountPrivateKey(key, nil)
 		if err != nil {
 			return nil, err
 		}
 	} else {
 		privSeed = seed.seedHash
 	}
-	pk, err := key.PK(&sequenceZero)
+	pk, err := key.PK(nil)
 	if err != nil {
 		return nil, err
 	}
 
-	pub, err := key.PUB(&sequenceZero)
+	pub, err := key.PUB(nil)
 	if err != nil {
 		return nil, err
 	}
@@ -217,7 +218,7 @@ func GenerateAddressObj(options string) (*Account, error) {
 	return &Account{
 		Address:         account.String(),
 		PublicKeyBase58: publicKey.String(),
-		PublicKeyHex:    fmt.Sprintf("%X", key.Public(&sequenceZero)),
+		PublicKeyHex:    fmt.Sprintf("%X", key.Public(nil)),
 		PrivateSeed:     privSeed.String(),
 		PrivateKey:      pk,
 		PublicKey:       pub,

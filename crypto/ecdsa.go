@@ -38,10 +38,8 @@ func newKey(seed []byte) *btcec.PrivateKey {
 		}
 		key.SetBytes(Sha512Half(finalBytes))
 		if key.Cmp(zero) > 0 && key.Cmp(order) < 0 {
-			//elliptic.P256()
-			//elliptic.P256()
+			privKey, _ := btcec.PrivKeyFromBytes(elliptic.S256(), key.Bytes())
 			//privKey, _ := btcec.PrivKeyFromBytes(btcec.S256(), key.Bytes())
-			privKey, _ := btcec.PrivKeyFromBytes(elliptic.P256(), key.Bytes())
 			return privKey
 		}
 	}
@@ -94,6 +92,7 @@ func (k *ecdsaKey) Public(sequence *uint32) []byte {
 	if sequence == nil {
 		return k.PubKey().SerializeCompressed()
 	}
+
 	return k.generateKey(*sequence).PubKey().SerializeCompressed()
 }
 
