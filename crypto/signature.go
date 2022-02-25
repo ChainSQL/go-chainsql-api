@@ -2,6 +2,7 @@ package crypto
 
 import (
 	"crypto/ed25519"
+	"crypto/elliptic"
 	"encoding/hex"
 	"fmt"
 
@@ -52,7 +53,8 @@ func verifyEd25519(pubKey, signature, msg []byte) (bool, error) {
 
 // Returns DER encoded signature from input hash
 func signECDSA(privateKey, hash []byte) ([]byte, error) {
-	priv, _ := btcec.PrivKeyFromBytes(btcec.S256(), privateKey)
+	priv, _ := btcec.PrivKeyFromBytes(elliptic.S256(), privateKey)
+	//priv, _ := btcec.PrivKeyFromBytes(btcec.S256(), privateKey)
 	sig, err := priv.Sign(hash)
 	if err != nil {
 		return nil, err

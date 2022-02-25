@@ -65,7 +65,7 @@ func PrivKeyFromBytes(privKey []byte) (*sm2.PrivateKey, error) {
 }*/
 
 func GenerateKeyPair(seed *Seed) (*smKey, error) {
-	if seed.seedHash == nil {
+	if seed.SeedHash == nil {
 		smKeyPair, err := generateKeyPair()
 		if err != nil {
 			return nil, err
@@ -73,7 +73,7 @@ func GenerateKeyPair(seed *Seed) (*smKey, error) {
 		return smKeyPair, nil
 	} else {
 		// 在国密算法内部添加新的方法
-		smKeyPair, err := GenerateKeyPairBySeed(seed.seedHash.Payload())
+		smKeyPair, err := GenerateKeyPairBySeed(seed.SeedHash.Payload())
 		if err != nil {
 			return nil, err
 		}

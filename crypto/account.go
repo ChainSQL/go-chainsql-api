@@ -1,12 +1,10 @@
 package crypto
 
 import (
-	"crypto/ecdsa"
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"github.com/ChainSQL/go-chainsql-api/common"
-	"github.com/btcsuite/btcd/btcec"
 	"log"
 	"strings"
 )
@@ -93,16 +91,16 @@ func GenerateAddress(options string) (string, error) {
 	sVersion := seed.version
 	switch sVersion {
 	case common.Ed25519:
-		key, err = NewEd25519Key(seed.seedHash.Payload())
+		key, err = NewEd25519Key(seed.SeedHash.Payload())
 		break
 	case common.SoftGMAlg:
 		key, err = GenerateKeyPair(seed)
 		break
 	case common.ECDSA:
-		key, err = NewECDSAKey(seed.seedHash.Payload())
+		key, err = NewECDSAKey(seed.SeedHash.Payload())
 		break
 	default:
-		key, err = NewECDSAKey(seed.seedHash.Payload())
+		key, err = NewECDSAKey(seed.SeedHash.Payload())
 	}
 	if err != nil {
 		return "", err
@@ -124,7 +122,7 @@ func GenerateAddress(options string) (string, error) {
 			return "", err
 		}
 	} else {
-		privSeed = seed.seedHash
+		privSeed = seed.SeedHash
 	}
 	pk, err := key.PK(&sequenceZero)
 	if err != nil {
@@ -145,11 +143,6 @@ func GenerateAddress(options string) (string, error) {
 		PublicKey:       pub,
 	}
 
-	pI := generated.PrivateKey.(*btcec.PrivateKey)
-	puI := generated.PublicKey.(ecdsa.PublicKey)
-	fmt.Printf("PI : %v\n", *pI)
-	fmt.Printf("PUI : %v\n", puI)
-
 	jsonStr, err := json.Marshal(generated)
 	if err != nil {
 		return "", err
@@ -169,25 +162,27 @@ func GenerateAddressObj(options string) (*Account, error) {
 		return nil, err
 	}
 	sVersion := seed.version
+	sequenceZero := uint32(0)
 	switch sVersion {
 	case common.Ed25519:
-		key, err = NewEd25519Key(seed.seedHash.Payload())
+		key, err = NewEd25519Key(seed.SeedHash.Payload())
 		break
 	case common.SoftGMAlg:
 		key, err = GenerateKeyPair(seed)
 		break
 	case common.ECDSA:
-		key, err = NewECDSAKey(seed.seedHash.Payload())
+		key1 := &ecdsaKey{}
+		key1, err = NewECDSAKey(seed.SeedHash.Payload())
+		key = key1.GenerateEcdsaKey(sequenceZero)
 		break
 	default:
-		key, err = NewECDSAKey(seed.seedHash.Payload())
+		key, err = NewECDSAKey(seed.SeedHash.Payload())
 	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	//account, err := AccountId(key, &sequenceZero)
 	account, err := AccountId(key, nil)
 	if err != nil {
 		return nil, err
@@ -203,7 +198,7 @@ func GenerateAddressObj(options string) (*Account, error) {
 			return nil, err
 		}
 	} else {
-		privSeed = seed.seedHash
+		privSeed = seed.SeedHash
 	}
 	pk, err := key.PK(nil)
 	if err != nil {

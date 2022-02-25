@@ -43,7 +43,7 @@ func NewRippleSeed(s string, version HashVersion) (*Seed, error) {
 	if err != nil {
 		return nil, err
 	}
-	keySeed.seedHash = hash
+	keySeed.SeedHash = hash
 	return keySeed, nil
 }
 
