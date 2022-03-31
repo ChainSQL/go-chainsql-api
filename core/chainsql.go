@@ -352,6 +352,10 @@ func (c *Chainsql) GetTransaction(hash string) (string, error) {
 	return c.client.GetTransaction(hash)
 }
 
+func (c *Chainsql) GetTransactionResult(hash string) (string, error) {
+	return c.client.GetTransactionResult(hash)
+}
+
 // PrepareTx prepare tx json for submit
 func (c *Chainsql) PrepareTx() (Signer, error) {
 	var tx Signer

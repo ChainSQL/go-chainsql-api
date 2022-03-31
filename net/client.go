@@ -616,3 +616,23 @@ func (c *Client) GetTransaction(hash string) (string, error) {
 	}
 	return request.Response.Value, nil
 }
+
+func (c *Client) GetTransactionResult(hash string) (string, error) {
+	type getTransactionResult struct {
+		common.RequestBase
+		Transaction string `json:"transaction"`
+	}
+
+	c.cmdIDs++
+	getTxResultReq := &getTransactionResult{}
+	getTxResultReq.ID = c.cmdIDs
+	getTxResultReq.Command = "tx_result"
+	getTxResultReq.Transaction = hash
+	request := c.syncRequest(getTxResultReq)
+
+	err := c.parseResponseError(request)
+	if err != nil {
+		return "", err
+	}
+	return request.Response.Value, nil
+}
