@@ -173,7 +173,7 @@ func (c *Chainsql) createSchema() (Signer, error) {
 		strings.Contains(schemaInfo, "Validators") && strings.Contains(schemaInfo, "PeerList")
 
 	if !isValid {
-		fmt.Errorf("Invalid schemaInfo parameter")
+		return nil, fmt.Errorf("Invalid schemaInfo parameter")
 	}
 	createSchema := &SchemaCreate{TxBase: TxBase{TransactionType: SCHEMA_CREATE}}
 	var jsonObj CreateSchema
@@ -183,13 +183,16 @@ func (c *Chainsql) createSchema() (Signer, error) {
 	}
 
 	createSchema.SchemaName = VariableLength(jsonObj.SchemaName)
-	account, err := NewAccountFromAddress(jsonObj.SchemaAdmin)
-	if err != nil {
-		return nil, err
+	if strings.Contains(schemaInfo, "SchemaAdmin") {
+		account, err := NewAccountFromAddress(jsonObj.SchemaAdmin)
+		if err != nil {
+			return nil, fmt.Errorf("Invalid schemaInfo parameter: SchemaAdmin")
+		}
+		if account != nil {
+			createSchema.SchemaAdmin = account
+		}
 	}
-	if account != nil {
-		createSchema.SchemaAdmin = account
-	}
+
 	if jsonObj.WithState {
 		//继承主链的节点状态
 		if strings.Contains(schemaInfo, "AnchorLedgerHash") {
