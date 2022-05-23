@@ -19,7 +19,19 @@ type Account struct {
 
 func main() {
 	c := core.NewChainsql()
-	err := c.Connect("ws://192.168.29.69:6305")
+
+	serverName := "peer0.org1.example.com"
+	address := "wss://127.0.0.1:6006"
+	rootPath := "./certs/root/ca.crt"
+	clientCertPath := "./certs/client/client.crt"
+	clientKeyPath := "./certs/client/client.key"
+
+	// serverName = ""
+	// rootPath = ""
+	// clientCertPath = ""
+	// clientKeyPath = ""
+
+	err := c.Connect(address, rootPath, clientCertPath, clientKeyPath, serverName)
 	log.Println("IsConnected:", c.IsConnected())
 	if err != nil {
 		log.Println(err)

@@ -67,8 +67,8 @@ func (c *Chainsql) Table(name string) *Table {
 }
 
 //Connect is used to create a websocket connection
-func (c *Chainsql) Connect(url string) error {
-	return c.client.Connect(url)
+func (c *Chainsql) Connect(url, tlsRootCertPath, tlsClientCertPath, tlsClientKeyPath, serverName string) error {
+	return c.client.Connect(url, tlsRootCertPath, tlsClientCertPath, tlsClientKeyPath, serverName)
 }
 
 // GetLedger request a ledger
