@@ -1,6 +1,10 @@
 package net
 
 import (
+	"crypto/tls"
+	"crypto/x509"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"sync"
 	"time"
@@ -25,10 +29,14 @@ type WebsocketManager struct {
 	muxConnect    *sync.Mutex
 	onReconnected Reconnected
 	first_connect bool
+	serverName        string
+	tlsRootCertPath   string
+	tlsClientKeyPath  string
+	tlsClientCertPath string
 }
 
 // NewWsClientManager is a constructor
-func NewWsClientManager(url string, timeout int) *WebsocketManager {
+func NewWsClientManager(url, tlsRootCertPath, tlsClientCertPath, tlsClientKeyPath, serverName string, timeout int) *WebsocketManager {
 	var sendChan = make(chan string, 1024)
 	var recvChan = make(chan string, 1024)
 	var conn *websocket.Conn
@@ -45,6 +53,10 @@ func NewWsClientManager(url string, timeout int) *WebsocketManager {
 		muxConnect:    new(sync.Mutex),
 		onReconnected: nil,
 		first_connect: true,
+		serverName:        serverName,
+		tlsRootCertPath:   tlsRootCertPath,
+		tlsClientKeyPath:  tlsClientKeyPath,
+		tlsClientCertPath: tlsClientCertPath,
 	}
 }
 
@@ -53,7 +65,40 @@ func (wsc *WebsocketManager) dail() error {
 	var err error
 	//log.Printf("connecting to %s", wsc.url)
 	websocket.DefaultDialer.HandshakeTimeout = util.DIAL_TIMEOUT * time.Second
-	wsc.conn, _, err = websocket.DefaultDialer.Dial(wsc.url, nil)
+
+	// tls config
+	tlsConfig := &tls.Config{
+		MaxVersion: tls.VersionTLS12,
+	}
+
+	if wsc.tlsRootCertPath != "" {
+		var caPem []byte
+		caPem, err = ioutil.ReadFile(wsc.tlsRootCertPath)
+		if err != nil {
+			return fmt.Errorf("failed to load tls root cert(path = %s), err = %v", wsc.tlsRootCertPath, err)
+		}
+		caPool := x509.NewCertPool()
+		if !caPool.AppendCertsFromPEM(caPem) {
+			return fmt.Errorf("credentials: failed to append certificates")
+		}
+
+		tlsConfig.ServerName = wsc.serverName
+		tlsConfig.RootCAs = caPool
+
+		if wsc.tlsClientCertPath != "" {
+			clientCert, err := tls.LoadX509KeyPair(wsc.tlsClientCertPath, wsc.tlsClientKeyPath)
+			tlsConfig.Certificates = []tls.Certificate{clientCert}
+			if err != nil {
+				return fmt.Errorf("failed to load tls client (cert path = %s; key path = %s), err = %v", wsc.tlsClientCertPath, wsc.tlsClientKeyPath, err)
+			}
+		}
+
+		dailer := &websocket.Dialer{TLSClientConfig: tlsConfig}
+		wsc.conn, _, err = dailer.Dial(wsc.url, nil)
+	} else {
+		wsc.conn, _, err = websocket.DefaultDialer.Dial(wsc.url, nil)
+	}
+
 	if err != nil {
 		//log.Printf("connecting to %s failed,err:%s", wsc.url, err.Error())
 		return err

@@ -46,14 +46,21 @@ var tableName = "hello2"
 
 func main() {
 	c := core.NewChainsql()
-	//err := c.Connect("wss://zxlm-fgm.peersafe.cn/ws-zhu")
-	//err := c.Connect("ws://192.168.177.106:6315")
-	err := c.Connect("ws://localhost:6006")
-	//	c.Disconnect()
-	//if !c.IsConnected() {
-		//return
-	//}
-	// log.Println("IsConnected:", c.IsConnected())
+
+
+	serverName := "peer0.org1.example.com"
+	address := "wss://127.0.0.1:6006"
+	rootPath := "./certs/root/ca.crt"
+	clientCertPath := "./certs/client/client.crt"
+	clientKeyPath := "./certs/client/client.key"
+
+	// serverName = ""
+	// rootPath = ""
+	// clientCertPath = ""
+	// clientKeyPath = ""
+
+	err := c.Connect(address, rootPath, clientCertPath, clientKeyPath, serverName)
+	log.Println("IsConnected:", c.IsConnected())
 	if err != nil {
 		log.Println(err)
 		return

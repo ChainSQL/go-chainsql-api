@@ -50,12 +50,12 @@ func NewClient() *Client {
 }
 
 //Connect is used to create a websocket connection
-func (c *Client) Connect(url string) error {
+func (c *Client) Connect(url, tlsRootCertPath, tlsClientCertPath, tlsClientKeyPath, serverName string) error {
 	if c.wm != nil {
 		return c.reConnect(url)
 	}
 
-	c.wm = NewWsClientManager(url, ReconnectInterval)
+	c.wm = NewWsClientManager(url, tlsRootCertPath, tlsClientCertPath, tlsClientKeyPath, serverName, ReconnectInterval)
 	err := c.wm.Start()
 	if err != nil {
 		return err
