@@ -1,6 +1,7 @@
 package crypto
 
 import (
+	"crypto/elliptic"
 	"crypto/rand"
 	"encoding/binary"
 	"math/big"
@@ -37,7 +38,8 @@ func newKey(seed []byte) *btcec.PrivateKey {
 		}
 		key.SetBytes(Sha512Half(finalBytes))
 		if key.Cmp(zero) > 0 && key.Cmp(order) < 0 {
-			privKey, _ := btcec.PrivKeyFromBytes(btcec.S256(), key.Bytes())
+			privKey, _ := btcec.PrivKeyFromBytes(elliptic.S256(), key.Bytes())
+			//privKey, _ := btcec.PrivKeyFromBytes(btcec.S256(), key.Bytes())
 			return privKey
 		}
 	}
@@ -54,7 +56,7 @@ func NewECDSAKey(seed []byte) (*ecdsaKey, error) {
 	return &ecdsaKey{newKey(seed)}, nil
 }
 
-func (k *ecdsaKey) generateKey(sequence uint32) *btcec.PrivateKey {
+func (k *ecdsaKey) GenerateKey(sequence uint32) *btcec.PrivateKey {
 	seed := make([]byte, btcec.PubKeyBytesLenCompressed+4)
 	copy(seed, k.PubKey().SerializeCompressed())
 	binary.BigEndian.PutUint32(seed[btcec.PubKeyBytesLenCompressed:], sequence)
@@ -62,6 +64,16 @@ func (k *ecdsaKey) generateKey(sequence uint32) *btcec.PrivateKey {
 	key.D.Add(key.D, k.D).Mod(key.D, order)
 	key.X, key.Y = key.ScalarBaseMult(key.D.Bytes())
 	return key
+}
+
+func (k *ecdsaKey) GenerateEcdsaKey(sequence uint32) *ecdsaKey {
+	seed := make([]byte, btcec.PubKeyBytesLenCompressed+4)
+	copy(seed, k.PubKey().SerializeCompressed())
+	binary.BigEndian.PutUint32(seed[btcec.PubKeyBytesLenCompressed:], sequence)
+	key := newKey(seed)
+	key.D.Add(key.D, k.D).Mod(key.D, order)
+	key.X, key.Y = key.ScalarBaseMult(key.D.Bytes())
+	return &ecdsaKey{key}
 }
 
 func (k *ecdsaKey) Id(sequence *uint32) []byte {
@@ -75,14 +87,31 @@ func (k *ecdsaKey) Private(sequence *uint32) []byte {
 	if sequence == nil {
 		return k.D.Bytes()
 	}
-	return k.generateKey(*sequence).D.Bytes()
+	return k.GenerateKey(*sequence).D.Bytes()
+}
+
+func (k *ecdsaKey) PK(sequence *uint32) (interface{}, error) {
+	//if sequence == nil {
+	//	return k.PrivateKey, nil
+	//}
+	//return k.GenerateKey(*sequence), nil
+	return k.PrivateKey.ToECDSA(), nil
 }
 
 func (k *ecdsaKey) Public(sequence *uint32) []byte {
 	if sequence == nil {
 		return k.PubKey().SerializeCompressed()
 	}
-	return k.generateKey(*sequence).PubKey().SerializeCompressed()
+
+	return k.GenerateKey(*sequence).PubKey().SerializeCompressed()
+}
+
+func (k *ecdsaKey) PUB(sequence *uint32) (interface{}, error) {
+	//if sequence == nil {
+	//	return k.PublicKey, nil
+	//}
+	//return k.GenerateKey(*sequence).PublicKey, nil
+	return k.PublicKey, nil
 }
 
 func (k *ecdsaKey) Type() common.KeyType {
