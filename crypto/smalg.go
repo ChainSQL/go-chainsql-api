@@ -65,7 +65,7 @@ func PrivKeyFromBytes(privKey []byte) (*sm2.PrivateKey, error) {
 }*/
 
 func GenerateKeyPair(seed *Seed) (*smKey, error) {
-	if seed.seedHash == nil {
+	if seed.SeedHash == nil {
 		smKeyPair, err := generateKeyPair()
 		if err != nil {
 			return nil, err
@@ -73,7 +73,7 @@ func GenerateKeyPair(seed *Seed) (*smKey, error) {
 		return smKeyPair, nil
 	} else {
 		// 在国密算法内部添加新的方法
-		smKeyPair, err := GenerateKeyPairBySeed(seed.seedHash.Payload())
+		smKeyPair, err := GenerateKeyPairBySeed(seed.SeedHash.Payload())
 		if err != nil {
 			return nil, err
 		}
@@ -108,13 +108,40 @@ func (k *smKey) Private(sequence *uint32) []byte {
 	return privateByte
 }
 
-func (k *smKey) Public(sequence *uint32) []byte {
+func (k *smKey) PK(sequence *uint32) (interface{}, error) {
+	privateByte, err := hex.DecodeString(k.PrivateKey) // 转码
+	if err != nil {
+		fmt.Printf("PrivateKey transcoding exception ")
+		return nil, fmt.Errorf("PrivateKey transcoding exception ")
+	}
+	pk, err := PrivKeyFromBytes(privateByte)
+	if err != nil {
+		fmt.Printf("sm2 PrivKeyFromBytes err : %v\n", err)
+		return nil, err
+	}
+	return pk, nil
+}
 
+func (k *smKey) Public(sequence *uint32) []byte {
 	pubkeyByte, err := hex.DecodeString(k.PublicKey)
 	if err != nil {
 		fmt.Printf("PublicKey transcoding exception ")
 	}
 	return []byte(pubkeyByte)
+}
+
+func (k *smKey) PUB(sequence *uint32) (interface{}, error) {
+	privateByte, err := hex.DecodeString(k.PrivateKey) // 转码
+	if err != nil {
+		fmt.Printf("PrivateKey transcoding exception ")
+		return nil, fmt.Errorf("PrivateKey transcoding exception ")
+	}
+	pk, err := PrivKeyFromBytes(privateByte)
+	if err != nil {
+		fmt.Printf("sm2 PrivKeyFromBytes err : %v\n", err)
+		return nil, err
+	}
+	return pk.PublicKey, nil
 }
 
 func (k *smKey) Type() common.KeyType {
