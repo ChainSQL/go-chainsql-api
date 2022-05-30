@@ -1,0 +1,28 @@
+version: '2'
+services:
+    chainsql:
+        container_name: chainsql
+        image: peersafes/chainsql:latest
+        restart: always
+        ports:
+          - 5005:5005
+          - 6006:6006
+          - 5017:5017
+        ulimits:
+          nproc: 65535
+          nofile:
+            soft: 65535
+            hard: 65535
+        volumes:
+          - ./certs/node:/opt/chainsql/node
+          - ./certs/root:/opt/chainsql/root
+          - /etc/localtime:/etc/localtime
+          - ./update:/usr/local/bin/update
+          - ./chainsqld.cfg:/opt/chainsql/chainsqld.cfg
+        
+        entrypoint: ["/bin/sh","-c","./chainsqld"]
+        logging:
+          driver: "json-file"
+          options:
+            max-size: "20m"
+            max-file: "100"
