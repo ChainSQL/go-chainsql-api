@@ -3,7 +3,7 @@ version: '3'
 services:
   go-sdk-build:
     container_name: go-sdk-build
-    image: peersafes/ubuntu-server-base-go-sdk:golang-1.17.8-gm
+    image: peersafes/ubuntu-server-base:golang-1.17.8-gm
     environment:
       - GODEBUG=netdns=go
       - GO111MODULE=off
