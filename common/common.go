@@ -8,7 +8,6 @@ const (
 	SoftGMAlg KeyType = 2
 )
 
-
 /*func (keyType KeyType) String() string {
 	switch keyType {
 	case secp256k1:

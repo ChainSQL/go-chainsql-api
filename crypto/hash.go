@@ -8,7 +8,7 @@ import (
 // First byte is the network
 // Second byte is the version
 // Remaining bytes are the payload
-type hash []byte
+type hashType []byte
 
 func NewRippleHash(s string) (Hash, error) {
 	// Special case which will deal short addresses
@@ -100,7 +100,7 @@ func newHash(b []byte, version HashVersion) (Hash, error) {
 	if len(b) > n {
 		return nil, fmt.Errorf("Hash is wrong size, expected: %d got: %d", n, len(b))
 	}
-	return append(hash{byte(version)}, b...), nil
+	return append(hashType{byte(version)}, b...), nil
 }
 
 func newHashFromString(s string) (Hash, error) {
@@ -108,24 +108,24 @@ func newHashFromString(s string) (Hash, error) {
 	if err != nil {
 		return nil, err
 	}
-	return hash(decoded[:len(decoded)-4]), nil
+	return hashType(decoded[:len(decoded)-4]), nil
 }
 
-func (h hash) String() string {
-	b := append(hash{byte(h.Version())}, h.Payload()...)
+func (h hashType) String() string {
+	b := append(hashType{byte(h.Version())}, h.Payload()...)
 	return Base58Encode(b, ALPHABET)
 }
 
-func (h hash) Version() HashVersion {
+func (h hashType) Version() HashVersion {
 	return HashVersion(h[0])
 }
 
-func (h hash) Payload() []byte {
+func (h hashType) Payload() []byte {
 	return h[1:]
 }
 
 // Return a slice of the payload with leading zeroes omitted
-func (h hash) PayloadTrimmed() []byte {
+func (h hashType) PayloadTrimmed() []byte {
 	payload := h.Payload()
 	for i := range payload {
 		if payload[i] != 0 {
@@ -135,16 +135,16 @@ func (h hash) PayloadTrimmed() []byte {
 	return payload[len(payload)-1:]
 }
 
-func (h hash) Value() *big.Int {
+func (h hashType) Value() *big.Int {
 	return big.NewInt(0).SetBytes(h.Payload())
 }
 
-func (h hash) MarshalText() ([]byte, error) {
+func (h hashType) MarshalText() ([]byte, error) {
 	return []byte(h.String()), nil
 }
 
-func (h hash) Clone() Hash {
-	c := make(hash, len(h))
+func (h hashType) Clone() Hash {
+	c := make(hashType, len(h))
 	copy(c, h)
 	return c
 }
