@@ -72,16 +72,18 @@ func main() {
 	// 	address: "zHb9CJAWyB4zj91VRWn96DkukG4bwdtyTh",
 	// 	secret:  "xnoPBzXtMeMyMHUVTgbuqAfg1SUTb",
 	// }
-	c.As(smRoot.address, smRoot.secret)
+	//c.As(smRoot.address, smRoot.secret)
 	//c.As(smRoot.address, smRoot.secret)
 	//c.SetSchema("44C2C733C17335C11B01BCB0B55340EA422F37307188FF84E6127F8BEBBF0C60")
 	//GenerateKey(rand.Reader)
-	// c.Use(root.address)
-
-	// // testSubLedger(c)
+	//c.Use(root.address)
+	c.As(root.address, root.secret)
+	// testSubLedger(c)
 	//testGenerateAccount(c)
 	//testInsert(c)
 	// testGetLedger(c)
+	testGetLedgerTxs(c)
+	testGetLedgerVersion(c)
 	// testSignPlainText(c)
 
 	// testGetTableData(c)
@@ -92,7 +94,7 @@ func main() {
 	//testValidationCreate(c)
 	//testGetAccountInfo(c)
 	// testGetServerInfo(c)
-	testPay(c)
+	// testPay(c)
 	//testSchemaCreate(c) //创建子链
 	//testSchemaModify(c) // 修改子链
 	//testGetSchemaList(c) //获取子链列表
@@ -106,7 +108,7 @@ func main() {
 	//testDeleteSchema(c)
 	// testGetTransactionResult(c)
 	for {
-		time.Sleep(time.Second * 10)
+		time.Sleep(time.Second * 1)
 	}
 }
 
@@ -193,6 +195,21 @@ func testGetLedger(c *core.Chainsql) {
 		ledger := c.GetLedger(i)
 		log.Printf("GetLedger %d:%s\n", i, ledger)
 	}
+}
+
+func testGetLedgerTxs(c *core.Chainsql) {
+	for i := 20; i < 25; i++ {
+		ledger := c.GetLedgerTransactions(i, true)
+		log.Printf("GetLedgerTransactions %d:%s\n", i, ledger)
+	}
+}
+
+func testGetLedgerVersion(c *core.Chainsql) {
+	ledger, err := c.GetLedgerVersion()
+	if err != nil {
+		log.Println("error:", err)
+	}
+	log.Println("GetLedgerVersion", ledger)
 }
 
 func testSubLedger(c *core.Chainsql) {

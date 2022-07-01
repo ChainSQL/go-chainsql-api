@@ -142,7 +142,7 @@ func (t *Table) Request() (string, error) {
 	if t.client.ServerInfo.Updated {
 		data.LedgerIndex = t.client.ServerInfo.LedgerIndex
 	} else {
-		ledgerIndex, err := t.client.GetLedgerVersion()
+		ledgerIndex, err := t.client.GetLedgerCurrent()
 		if err != nil {
 			return "", err
 		}
@@ -187,7 +187,7 @@ func (t *Table) PrepareTx() (Signer, error) {
 		tx.LastLedgerSequence = &last
 		fee = int64(t.client.ServerInfo.ComputeFee())
 	} else {
-		ledgerIndex, err := t.client.GetLedgerVersion()
+		ledgerIndex, err := t.client.GetLedgerCurrent()
 		if err != nil {
 			return nil, err
 		}
