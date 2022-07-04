@@ -79,6 +79,11 @@ func (c *Chainsql) GetLedger(seq int) string {
 	return c.client.GetLedger(seq)
 }
 
+// GetLedgerTransactions request a ledger
+func (c *Chainsql) GetLedgerTransactions(seq int, expand bool) string {
+	return c.client.GetLedgerTransactions(seq, expand)
+}
+
 //OnLedgerClosed reponses in callback functor
 func (c *Chainsql) OnLedgerClosed(callback export.Callback) {
 	c.client.Event.SubscribeLedger(callback)
@@ -122,7 +127,7 @@ func (c *Chainsql) GetBySqlUser(sql string) (string, error) {
 	if c.client.ServerInfo.Updated {
 		data.LedgerIndex = c.client.ServerInfo.LedgerIndex
 	} else {
-		ledgerIndex, err := c.client.GetLedgerVersion()
+		ledgerIndex, err := c.client.GetLedgerCurrent()
 		if err != nil {
 			return "", err
 		}
@@ -397,7 +402,7 @@ func (c *Chainsql) prepareTxBase(tx Signer) (Signer, error) {
 		last = uint32(c.client.ServerInfo.LedgerIndex + util.Seqinterval)
 		fee = int64(c.client.ServerInfo.ComputeFee())
 	} else {
-		ledgerIndex, err := c.client.GetLedgerVersion()
+		ledgerIndex, err := c.client.GetLedgerCurrent()
 		if err != nil {
 			return nil, err
 		}
@@ -421,4 +426,8 @@ func (c *Chainsql) prepareTxBase(tx Signer) (Signer, error) {
 	}
 	tx.SetTxBase(seq, *finalFee, &last, *account)
 	return tx, nil
+}
+
+func (c *Chainsql) GetLedgerVersion() (int, error) {
+	return c.client.GetLedgerVersion()
 }

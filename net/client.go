@@ -213,8 +213,61 @@ func (c *Client) GetLedger(seq int) string {
 	return request.Response.Value
 }
 
+// GetLedger request for ledger data
+func (c *Client) GetLedgerTransactions(seq int, expand bool) string {
+	type getLedgerTxs struct {
+		common.RequestBase
+		LedgerIndex  int  `json:"ledger_index"`
+		Transactions bool `json:"transactions"`
+		Expand       bool `json:"expand"`
+	}
+	c.cmdIDs++
+	ledgerReq := &getLedgerTxs{
+		RequestBase: common.RequestBase{
+			Command: "ledger",
+			ID:      c.cmdIDs,
+		},
+		LedgerIndex:  seq,
+		Transactions: true,
+	}
+	if expand {
+		ledgerReq.Expand = true
+	}
+
+	request := c.syncRequest(ledgerReq)
+
+	return request.Response.Value
+}
+
 // GetLedgerVersion request for ledger version
 func (c *Client) GetLedgerVersion() (int, error) {
+	type ledgerVersionRequest struct {
+		common.RequestBase
+		LedgerIndex string `json:"ledger_index"`
+	}
+	c.cmdIDs++
+	ledgerReq := &ledgerVersionRequest{
+		RequestBase: common.RequestBase{
+			Command: "ledger",
+			ID:      c.cmdIDs,
+		},
+		LedgerIndex: "validated",
+	}
+	request := c.syncRequest(ledgerReq)
+	err := c.parseResponseError(request)
+	if err != nil {
+		log.Println("GetLedgerVersion:", err)
+		return 0, err
+	}
+	ledgerIndex, err := jsonparser.GetInt([]byte(request.Response.Value), "result", "ledger_index")
+	if err != nil {
+		return 0, err
+	}
+	return int(ledgerIndex), nil
+}
+
+// GetLedgerCurrent request for ledger version
+func (c *Client) GetLedgerCurrent() (int, error) {
 	type Request struct {
 		common.RequestBase
 	}
