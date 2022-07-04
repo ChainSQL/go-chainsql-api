@@ -2,8 +2,9 @@ package core
 
 import (
 	"fmt"
-	"github.com/buger/jsonparser"
 	"strconv"
+
+	"github.com/buger/jsonparser"
 
 	. "github.com/ChainSQL/go-chainsql-api/data"
 	"github.com/ChainSQL/go-chainsql-api/net"
@@ -23,8 +24,8 @@ type Base struct {
 
 //TxInfo is the opearting details
 type TxInfo struct {
-	Raw   string
-	TxType  TransactionType
+	Raw    string
+	TxType TransactionType
 	Query  []interface{}
 }
 
@@ -70,7 +71,7 @@ func NewRipple(client *net.Client) *Ripple {
 func (r *Ripple) Pay(accountId string, value int64) *Ripple {
 	r.op.TxType = PAYMENT
 
-	r.op.Raw = "{\"AccountId\": \"" + accountId +  "\", \"Value\": \"" + strconv.FormatInt(value,10) + "\"}"
+	r.op.Raw = "{\"AccountId\": \"" + accountId + "\", \"Value\": \"" + strconv.FormatInt(value, 10) + "\"}"
 	return r
 }
 
@@ -127,7 +128,7 @@ func (r *Ripple) PayToNode(accountId string, amount Amount) (Signer, error) {
 	// }
 	destination, err := NewAccountFromAddress(accountId)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 	payment := &Payment{
 		//SendMax:     nil,

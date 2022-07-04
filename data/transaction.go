@@ -219,6 +219,15 @@ type SchemaDelete struct {
 	SchemaID Hash256
 }
 
+type ContractTx struct {
+	TxBase
+	ContractAddress Account        `json:"ContractAddress"` //option
+	ContractOpType  uint16         `json:"ContractOpType"`
+	ContractData    VariableLength `json:"ContractData"`
+	ContractValue   Amount         `json:"ContractValue"`
+	Gas             uint32         `json:"Gas"`
+}
+
 func (txBase *TxBase) SetTxBase(seq uint32, fee Value, lastLedgerSequence *uint32, account Account) {
 	txBase.Sequence = seq
 	txBase.Fee = fee

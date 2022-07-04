@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/big"
 	"time"
 
 	"github.com/ChainSQL/go-chainsql-api/core"
+	"github.com/ChainSQL/go-chainsql-api/test/storage"
 	"github.com/buger/jsonparser"
 	"github.com/gorilla/websocket"
 )
@@ -36,7 +38,7 @@ var user2 = Account{
 	address: "zKXfeKXkTtLSTkEzaJyu2cRmRBFRvTW2zc",
 	secret:  "xhtBo8BLBZtTgc3LHnRspaFro5P4H",
 }
-var smRoot = Account{
+var gmRoot = Account{
 	address: "zN7TwUjJ899xcvNXZkNJ8eFFv2VLKdESsj",
 	secret:  "p97evg5Rht7ZB7DbEpVqmV3yiSBMxR3pRBKJyLcRWt7SL5gEeBb",
 }
@@ -72,14 +74,15 @@ func main() {
 	// 	address: "zHb9CJAWyB4zj91VRWn96DkukG4bwdtyTh",
 	// 	secret:  "xnoPBzXtMeMyMHUVTgbuqAfg1SUTb",
 	// }
-	c.As(smRoot.address, smRoot.secret)
+	c.As(gmRoot.address, gmRoot.secret)
 	//c.As(smRoot.address, smRoot.secret)
 	//c.SetSchema("44C2C733C17335C11B01BCB0B55340EA422F37307188FF84E6127F8BEBBF0C60")
 	//GenerateKey(rand.Reader)
 	// c.Use(root.address)
 
-	// // testSubLedger(c)
-	//testGenerateAccount(c)
+	testContract(c)
+	// testSubLedger(c)
+	// testGenerateAccount(c)
 	//testInsert(c)
 	// testGetLedger(c)
 	// testSignPlainText(c)
@@ -90,9 +93,9 @@ func main() {
 	// testWebsocket()
 	// testTickerGet(c)\
 	//testValidationCreate(c)
-	//testGetAccountInfo(c)
+	// testGetAccountInfo(c)
 	// testGetServerInfo(c)
-	testPay(c)
+	// testPay(c)
 	//testSchemaCreate(c) //创建子链
 	//testSchemaModify(c) // 修改子链
 	//testGetSchemaList(c) //获取子链列表
@@ -100,9 +103,9 @@ func main() {
 	//testStopSchema(c) //
 	//testStartSchema(c)
 
-	//testGetTransaction(c)
+	// testGetTransaction(c)
 	//testGetSchemaId(c)
-	//testGenerateAddress(c)
+	// testGenerateAddress(c)
 	//testDeleteSchema(c)
 	// testGetTransactionResult(c)
 	for {
@@ -271,7 +274,7 @@ func testValidationCreate(c *core.Chainsql) {
 }
 
 func testGetAccountInfo(c *core.Chainsql) {
-	account, err := c.GetAccountInfo(user1.address)
+	account, err := c.GetAccountInfo(gmRoot.address)
 	if err != nil {
 		log.Println(err)
 	}
@@ -284,6 +287,49 @@ func testGetServerInfo(c *core.Chainsql) {
 		log.Println(err)
 	}
 	log.Printf("seedKey %s\n", serverInfo)
+}
+
+func testContract(c *core.Chainsql) {
+	// testDeployContract(c)
+
+	contractAddr := "zMdM8JQKh8B9jVxzZn4w3zzw8UJTSCL1mi"
+	testInvokeContract(c, contractAddr)
+}
+func testDeployContract(c *core.Chainsql) {
+	transactOpt := &core.TransactOpts{
+		ContractValue: 0,
+		Gas:           3000000,
+		Expectation:   "validate_success",
+	}
+
+	deployRet, _, _ := storage.DeployStorage(c, transactOpt)
+	log.Println(deployRet)
+}
+func testInvokeContract(c *core.Chainsql, contractAddr string) {
+	storageIns, _ := storage.NewStorage(c, contractAddr)
+
+	testCallContract(c, storageIns)
+	testSubmitContract(c, storageIns)
+	testCallContract(c, storageIns)
+}
+func testCallContract(c *core.Chainsql, storageIns *storage.Storage) {
+	callOpt := &core.CallOpts{}
+	ret, _ := storageIns.Retrieve(callOpt)
+	log.Println(ret)
+}
+func testSubmitContract(c *core.Chainsql, storageIns *storage.Storage) {
+	transactOpt := &core.TransactOpts{
+		ContractValue: 0,
+		Gas:           3000000,
+		Expectation:   "validate_success",
+	}
+
+	ret, err := storageIns.Store(transactOpt, big.NewInt(789))
+	if err != nil {
+		log.Fatalln(err)
+	} else {
+		log.Println(ret)
+	}
 }
 
 func testPay(c *core.Chainsql) {
@@ -336,7 +382,7 @@ func testStartSchema(c *core.Chainsql) {
 }
 
 func testGetTransaction(c *core.Chainsql) {
-	txHash := "52F7B8FEBC0FEDB56AAA26FA3A8F8C3D507C2E0706BF522644B308AD0190DB88"
+	txHash := "AEE4C7AA7558FD5C31C89E6F9F4491B9933FBB365A9FA3C02FD9E677C4ED6A86"
 	ret, err := c.GetTransaction(txHash)
 	log.Println(ret)
 	log.Println(err)
@@ -351,7 +397,8 @@ func testGetSchemaId(c *core.Chainsql) {
 
 func testGenerateAddress(c *core.Chainsql) {
 	//option := ""
-	option := "{\"algorithm\":\"softGMAlg\", \"secret\":\"pwRdHmA4cSUKKtFyo4m2vhiiz5g6ym58Noo9dTsUU97mARNjevj\"}"
+	option := "{\"algorithm\":\"softGMAlg\"}"
+	// option := "{\"algorithm\":\"softGMAlg\", \"secret\":\"pwRdHmA4cSUKKtFyo4m2vhiiz5g6ym58Noo9dTsUU97mARNjevj\"}"
 	//xp6FwxZP1rrmPy2GDTobvHTgnZnrC
 	//xnoPBzXtMeMyMHUVTgbuqAfg1SUTb
 	//option := "{\"algorithm\":\"secp256k1\", \"secret\":\"xp6FwxZP1rrmPy2GDTobvHTgnZnrC\"}"

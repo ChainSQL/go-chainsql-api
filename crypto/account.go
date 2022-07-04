@@ -2,11 +2,13 @@ package crypto
 
 import (
 	"crypto/rand"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"github.com/ChainSQL/go-chainsql-api/common"
 	"log"
 	"strings"
+
+	"github.com/ChainSQL/go-chainsql-api/common"
 )
 
 //Account define the account format
@@ -218,6 +220,23 @@ func GenerateAddressObj(options string) (*Account, error) {
 		PrivateKey:      pk,
 		PublicKey:       pub,
 	}, nil
+}
+
+func CreateContractAddr(ctrOwnerAddr string, sequence uint32) (string, error) {
+	deBase58Addr, error := newHashFromString(ctrOwnerAddr)
+	if error != nil {
+		return "", error
+	}
+
+	seqByte := make([]byte, 4)
+	binary.BigEndian.PutUint32(seqByte, sequence)
+	finalByte := append(deBase58Addr.Payload(), seqByte...)
+
+	contractAddr, error := NewAccountId(Sha256RipeMD160(finalByte))
+	if error != nil {
+		return "", error
+	}
+	return contractAddr.String(), nil
 }
 
 func ValidationCreate() (string, error) {

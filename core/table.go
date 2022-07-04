@@ -181,22 +181,11 @@ func (t *Table) PrepareTx() (Signer, error) {
 	tx.Account = *account
 	tx.Owner = *owner
 	tx.Sequence = seq
-	var fee int64 = 10
-	if t.client.ServerInfo.Updated {
-		last := uint32(t.client.ServerInfo.LedgerIndex + 20)
-		tx.LastLedgerSequence = &last
-		fee = int64(t.client.ServerInfo.ComputeFee())
-	} else {
-		ledgerIndex, err := t.client.GetLedgerVersion()
-		if err != nil {
-			return nil, err
-		}
-		last := uint32(ledgerIndex + 20)
-		tx.LastLedgerSequence = &last
-
-		fee = 50
+	fee, lastLedgerSeq, err := net.PrepareLastLedgerSeqAndFee(t.client)
+	if err != nil {
+		return nil, err
 	}
-
+	tx.LastLedgerSequence = &lastLedgerSeq
 	fee += util.GetExtraFee(t.op.Raw, t.client.ServerInfo.DropsPerByte)
 	finalFee, err := NewNativeValue(fee)
 	if err != nil {

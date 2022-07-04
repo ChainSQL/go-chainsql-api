@@ -6,6 +6,8 @@ import (
 	"github.com/buger/jsonparser"
 )
 
+const LastLedgerSeqOffset = 20
+
 //PrepareTable return the account sequence and table NameInDB
 func PrepareTable(client *Client, name string) (uint32, string, error) {
 	w := new(sync.WaitGroup)
@@ -40,7 +42,6 @@ func PrepareTable(client *Client, name string) (uint32, string, error) {
 	return seq, nameInDB, err
 }
 
-//PrepareTable return the account sequence and table NameInDB
 func PrepareRipple(client *Client) (uint32, error) {
 
 	var seq uint32 = 0
@@ -59,4 +60,22 @@ func PrepareRipple(client *Client) (uint32, error) {
 	seq = uint32(sequence)
 
 	return seq, err
+}
+
+func PrepareLastLedgerSeqAndFee(client *Client) (int64, uint32, error) {
+	var fee int64 = 10
+	var lastLedgerSeq uint32 = 10
+	if client.ServerInfo.Updated {
+		lastLedgerSeq = uint32(client.ServerInfo.LedgerIndex + LastLedgerSeqOffset)
+		fee = int64(client.ServerInfo.ComputeFee())
+	} else {
+		ledgerIndex, err := client.GetLedgerVersion()
+		if err != nil {
+			return 0, 0, err
+		}
+		lastLedgerSeq = uint32(ledgerIndex + LastLedgerSeqOffset)
+
+		fee = 50
+	}
+	return fee, lastLedgerSeq, nil
 }

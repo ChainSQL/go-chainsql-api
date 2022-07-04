@@ -1,12 +1,12 @@
 package core
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
 	"sync"
 
+	. "github.com/ChainSQL/go-chainsql-api/common"
 	"github.com/ChainSQL/go-chainsql-api/crypto"
 	. "github.com/ChainSQL/go-chainsql-api/data"
 	"github.com/ChainSQL/go-chainsql-api/export"
@@ -25,14 +25,6 @@ type TxSigned struct {
 	hash string
 }
 
-// TxResult is tx submit response
-type TxResult struct {
-	Status       string `json:"status"`
-	TxHash       string `json:"hash"`
-	ErrorCode    string `json:"error,omitempty"`
-	ErrorMessage string `json:"errorMessage,omitempty"`
-}
-
 // IPrepare is an interface that a struct call submit() method must implment
 type IPrepare interface {
 	PrepareTx() (Signer, error)
@@ -46,12 +38,17 @@ type SubmitBase struct {
 	IPrepare
 }
 
+// // Submit submit a tx with a cocurrent expect
+// func (s *SubmitBase) Submit(cond string) string {
+// 	s.expect = cond
+// 	ret := s.doSubmit()
+// 	jsonRet, _ := json.Marshal(ret)
+// 	return string(jsonRet)
+// }
 // Submit submit a tx with a cocurrent expect
-func (s *SubmitBase) Submit(cond string) string {
+func (s *SubmitBase) Submit(cond string) (txRet *TxResult) {
 	s.expect = cond
-	ret := s.doSubmit()
-	jsonRet, _ := json.Marshal(ret)
-	return string(jsonRet)
+	return s.doSubmit()
 }
 
 //SubmitAsync submit a transaction and got response asynchronously
@@ -89,9 +86,9 @@ func (s *SubmitBase) doSubmit() *TxResult {
 	}else {
 		hasher = sha512.New()
 	}
-*/
+	*/
 	sequenceZero := uint32(0)
-	err = Sign(tx, key, &sequenceZero,key.Type())
+	err = Sign(tx, key, &sequenceZero, key.Type())
 	if err != nil {
 		log.Printf("doSubmit error:%s\n", err)
 		return &TxResult{

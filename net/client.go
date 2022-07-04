@@ -109,11 +109,11 @@ func (c *Client) InitSubscription() {
 		common.RequestBase
 		Streams []string `json:"streams"`
 	}
-	c.cmdIDs++
+
 	subCmd := &Subscribe{
 		RequestBase: common.RequestBase{
 			Command: "subscribe",
-			ID:      c.cmdIDs,
+			// ID:      c.cmdIDs,
 		},
 		Streams: []string{"ledger", "server"},
 	}
@@ -200,11 +200,11 @@ func (c *Client) GetLedger(seq int) string {
 		common.RequestBase
 		LedgerIndex int `json:"ledger_index"`
 	}
-	c.cmdIDs++
+
 	ledgerReq := &getLedger{
 		RequestBase: common.RequestBase{
 			Command: "ledger",
-			ID:      c.cmdIDs,
+			// ID:      c.cmdIDs,
 		},
 		LedgerIndex: seq,
 	}
@@ -218,11 +218,11 @@ func (c *Client) GetLedgerVersion() (int, error) {
 	type Request struct {
 		common.RequestBase
 	}
-	c.cmdIDs++
+
 	ledgerReq := &Request{
 		RequestBase: common.RequestBase{
 			Command: "ledger_current",
-			ID:      c.cmdIDs,
+			// ID:      c.cmdIDs,
 		},
 	}
 	request := c.syncRequest(ledgerReq)
@@ -236,6 +236,10 @@ func (c *Client) GetLedgerVersion() (int, error) {
 		return 0, err
 	}
 	return int(ledgerIndex), nil
+}
+
+func (c *Client) ParseResponseError(request *Request) error {
+	return c.parseResponseError(request)
 }
 
 func (c *Client) parseResponseError(request *Request) error {
@@ -256,9 +260,8 @@ func (c *Client) GetAccountInfo(address string) (string, error) {
 		common.RequestBase
 		Account string `json:"account"`
 	}
-	c.cmdIDs++
+
 	accountReq := &getAccount{}
-	accountReq.ID = c.cmdIDs
 	accountReq.Command = "account_info"
 	accountReq.Account = address
 
@@ -279,9 +282,8 @@ func (c *Client) GetNameInDB(address string, tableName string) (string, error) {
 		Account   string `json:"account"`
 		TableName string `json:"tablename"`
 	}
-	c.cmdIDs++
+
 	req := &Request{}
-	req.ID = c.cmdIDs
 	req.Command = "g_dbname"
 	req.Account = address
 	req.TableName = tableName
@@ -305,9 +307,8 @@ func (c *Client) Submit(blob string) string {
 		common.RequestBase
 		TxBlob string `json:"tx_blob"`
 	}
-	c.cmdIDs++
+
 	req := &Request{}
-	req.ID = c.cmdIDs
 	req.Command = "submit"
 	req.TxBlob = blob
 
@@ -352,9 +353,8 @@ func (c *Client) GetTableData(dataJSON interface{}, bSql bool) (string, error) {
 		SigningData string      `json:"signingData"`
 		TxJSON      interface{} `json:"tx_json"`
 	}
-	c.cmdIDs++
+
 	req := &Request{}
-	req.ID = c.cmdIDs
 	req.Command = "r_get"
 	if bSql {
 		req.Command = "r_get_sql_user"
@@ -400,7 +400,15 @@ func (c *Client) GetTableData(dataJSON interface{}, bSql bool) (string, error) {
 	return string(result), nil
 }
 
+func (c *Client) SyncRequest(v common.IRequest) *Request {
+	return c.syncRequest(v)
+}
+
 func (c *Client) syncRequest(v common.IRequest) *Request {
+	c.cmdIDs++
+	if v.GetID() == 0 {
+		v.SetID(c.cmdIDs)
+	}
 	if c.SchemaID != "" {
 		v.SetSchemaID(c.SchemaID)
 	}
@@ -452,9 +460,8 @@ func (c *Client) GetServerInfo() (string, error) {
 	type getServerInfo struct {
 		common.RequestBase
 	}
-	c.cmdIDs++
+
 	accountReq := &getServerInfo{}
-	accountReq.ID = c.cmdIDs
 	accountReq.Command = "server_info"
 
 	request := c.syncRequest(accountReq)
@@ -480,11 +487,9 @@ func (c *Client) GetSchemaList(params string) (string, error) {
 		Account string `json:"account,omitempty"`
 	}
 
-	c.cmdIDs++
 	var request *Request
 	if strings.Contains(params, "running") {
 		schemaListReq := &getRunSchemaList{}
-		schemaListReq.ID = c.cmdIDs
 		schemaListReq.Command = "schema_list"
 		if account != "" {
 			schemaListReq.Account = account
@@ -492,9 +497,8 @@ func (c *Client) GetSchemaList(params string) (string, error) {
 		schemaListReq.Running = running
 		request = c.syncRequest(schemaListReq)
 
-	}else{
+	} else {
 		schemaListReq := &getSchemaList{}
-		schemaListReq.ID = c.cmdIDs
 		schemaListReq.Command = "schema_list"
 		if account != "" {
 			schemaListReq.Account = account
@@ -517,9 +521,8 @@ func (c *Client) GetSchemaInfo(schemaID string) (string, error) {
 		common.RequestBase
 		Schema string `json:"schema"`
 	}
-	c.cmdIDs++
+
 	schemaInfoReq := &getSchemaInfo{}
-	schemaInfoReq.ID = c.cmdIDs
 	schemaInfoReq.Command = "schema_info"
 	schemaInfoReq.Schema = schemaID
 	request := c.syncRequest(schemaInfoReq)
@@ -539,9 +542,8 @@ func (c *Client) StopSchema(schemaID string) (string, error) {
 		common.RequestBase
 		Schema string `json:"schema"`
 	}
-	c.cmdIDs++
+
 	StopSchemaReq := &StopSchema{}
-	StopSchemaReq.ID = c.cmdIDs
 	StopSchemaReq.Command = "stop"
 	StopSchemaReq.Schema = schemaID
 	request := c.syncRequest(StopSchemaReq)
@@ -561,9 +563,8 @@ func (c *Client) StartSchema(schemaID string) (string, error) {
 		common.RequestBase
 		Schema string `json:"schema"`
 	}
-	c.cmdIDs++
+
 	StartSchemaReq := &StartSchema{}
-	StartSchemaReq.ID = c.cmdIDs
 	StartSchemaReq.Command = "schema_start"
 	StartSchemaReq.Schema = schemaID
 	request := c.syncRequest(StartSchemaReq)
@@ -580,11 +581,11 @@ func (c *Client) Unsubscribe() (string, error) {
 		common.RequestBase
 		Streams []string `json:"streams"`
 	}
-	c.cmdIDs++
+
 	unsubCmd := &Unsubscribe{
 		RequestBase: common.RequestBase{
 			Command: "unsubscribe",
-			ID:      c.cmdIDs,
+			// ID:      c.cmdIDs,
 		},
 		Streams: []string{"ledger", "server"},
 	}
@@ -603,9 +604,7 @@ func (c *Client) GetTransaction(hash string) (string, error) {
 		Transaction string `json:"transaction"`
 	}
 
-	c.cmdIDs++
 	getTransactionReq := &getTransaction{}
-	getTransactionReq.ID = c.cmdIDs
 	getTransactionReq.Command = "tx"
 	getTransactionReq.Transaction = hash
 	request := c.syncRequest(getTransactionReq)
@@ -623,9 +622,7 @@ func (c *Client) GetTransactionResult(hash string) (string, error) {
 		Transaction string `json:"transaction"`
 	}
 
-	c.cmdIDs++
 	getTxResultReq := &getTransactionResult{}
-	getTxResultReq.ID = c.cmdIDs
 	getTxResultReq.Command = "tx_result"
 	getTxResultReq.Transaction = hash
 	request := c.syncRequest(getTxResultReq)

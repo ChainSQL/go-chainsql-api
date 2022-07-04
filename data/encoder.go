@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"crypto/sha512"
 	"fmt"
-	"github.com/ChainSQL/go-chainsql-api/common"
-	"github.com/peersafe/gm-crypto/sm3"
 	"hash"
 	"io"
 	"reflect"
 	"sort"
 	"strings"
+
+	"github.com/ChainSQL/go-chainsql-api/common"
+	"github.com/peersafe/gm-crypto/sm3"
 )
 
 func Raw(h Hashable, keyType common.KeyType) (Hash256, []byte, error) {
@@ -26,7 +27,7 @@ func SigningHash(s Signer, keyType common.KeyType) (Hash256, []byte, error) {
 	return raw(s, s.SigningPrefix(), true, keyType)
 }
 
-func Node(h Storer, keyType common.KeyType) (Hash256, []byte, error, ) {
+func Node(h Storer, keyType common.KeyType) (Hash256, []byte, error) {
 	var header bytes.Buffer
 	for _, v := range []interface{}{h.Ledger(), h.Ledger(), h.NodeType(), h.Prefix()} {
 		if err := write(&header, v); err != nil {
@@ -45,7 +46,7 @@ func raw(value interface{}, prefix HashPrefix, ignoreSigningFields bool, keyType
 	var hasher hash.Hash
 	if keyType == common.SoftGMAlg {
 		hasher = sm3.New()
-	}else {
+	} else {
 		hasher = sha512.New()
 	}
 	multi := io.MultiWriter(buf, hasher)
@@ -110,13 +111,17 @@ func writeRaw(w io.Writer, value interface{}, ignoreSigningFields bool, keyType 
 func encode(w io.Writer, value interface{}, ignoreSigningFields bool) error {
 	v := reflect.Indirect(reflect.ValueOf(value))
 	fields := getFields(&v, 0)
-	// fmt.Println(fields.String())
+	fmt.Println(fields.String())
 	return fields.Each(func(e enc, v interface{}) error {
 		if ignoreSigningFields && e.SigningField() {
 			return nil
 		}
-		if err := writeEncoding(w, e); err != nil {
-			return err
+		// if err := writeEncoding(w, e); err != nil {
+		// 	return err
+		// }
+		err1 := writeEncoding(w, e)
+		if err1 != nil {
+			return err1
 		}
 		var err error
 		switch v2 := v.(type) {

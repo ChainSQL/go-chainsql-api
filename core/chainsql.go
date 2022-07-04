@@ -16,7 +16,7 @@ import (
 
 // Chainsql is the interface struct for this package
 type Chainsql struct {
-	client *net.Client
+	// client *net.Client
 	SubmitBase
 	op *ChainsqlTxInfo
 }
@@ -38,12 +38,13 @@ type TableGetSqlJSON struct {
 // NewChainsql is a function that create a chainsql object
 func NewChainsql() *Chainsql {
 	chainsql := &Chainsql{
-		client: net.NewClient(),
+		// client: net.NewClient(),
 		op: &ChainsqlTxInfo{
 			Query: make([]interface{}, 0),
 		},
 	}
-	chainsql.SubmitBase.client = chainsql.client
+	chainsql.client = net.NewClient()
+	// chainsql.SubmitBase.client = chainsql.client
 	chainsql.SubmitBase.IPrepare = chainsql
 	return chainsql
 }

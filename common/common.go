@@ -31,9 +31,18 @@ type Auth struct {
 	Owner   string
 }
 
+// TxResult is tx submit response
+type TxResult struct {
+	Status       string `json:"status"`
+	TxHash       string `json:"hash"`
+	ErrorCode    string `json:"error,omitempty"`
+	ErrorMessage string `json:"errorMessage,omitempty"`
+}
+
 //IRequest define interface for request
 type IRequest interface {
 	GetID() int64
+	SetID(inputID int64)
 	SetSchemaID(schemaID string) *RequestBase
 }
 
@@ -47,6 +56,10 @@ type RequestBase struct {
 // GetID  return id for request
 func (r *RequestBase) GetID() int64 {
 	return r.ID
+}
+
+func (r *RequestBase) SetID(inputId int64) {
+	r.ID = inputId
 }
 
 func (r *RequestBase) SetSchemaID(schemaID string) *RequestBase {

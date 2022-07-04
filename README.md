@@ -2,7 +2,15 @@
   
 使用请参考 [test/main.go](./test/main.go)
 
-# 安装运行
+## 依赖安装
+
+首先执行下面命令：
+> go env -w GOPRIVATE="gitlab.peersafe.cn"
+
+然后执行依赖下载命令：
+> go mod tidy
+
+## 安装运行
 1. windoss
 要把./cgofuns/cdll/win下面的所有dll文件与可执行程序放在一起。
 2. linux

@@ -95,6 +95,7 @@ var encodings = map[enc]string{
 	// 16-bit unsigned integers (uncommon)
 	enc{ST_UINT16, 16}: "Version",
 	enc{ST_UINT16, 50}: "OpType",
+	enc{ST_UINT16, 51}: "ContractOpType",
 	// 32-bit unsigned integers (common)
 	enc{ST_UINT32, 2}:  "Flags",
 	enc{ST_UINT32, 3}:  "SourceTag",
@@ -134,6 +135,7 @@ var encodings = map[enc]string{
 	enc{ST_UINT32, 37}: "FinishAfter",
 	enc{ST_UINT32, 38}: "SignerListID",
 	enc{ST_UINT32, 39}: "SettleDelay",
+	enc{ST_UINT32, 55}: "Gas",
 	// 64-bit unsigned integers (common)
 	enc{ST_UINT64, 1}:  "IndexNext",
 	enc{ST_UINT64, 2}:  "IndexPrevious",
@@ -183,6 +185,7 @@ var encodings = map[enc]string{
 	enc{ST_AMOUNT, 16}: "MinimumOffer",
 	enc{ST_AMOUNT, 17}: "RippleEscrow",
 	enc{ST_AMOUNT, 18}: "DeliveredAmount",
+	enc{ST_AMOUNT, 19}: "ContractValue",
 	// variable length (common)
 	enc{ST_VL, 1}:  "PublicKey",
 	enc{ST_VL, 2}:  "MessageKey",
@@ -205,8 +208,13 @@ var encodings = map[enc]string{
 	enc{ST_VL, 51}: "TableName",
 	enc{ST_VL, 52}: "Raw",
 	enc{ST_VL, 54}: "AutoFillField",
+	enc{ST_VL, 64}: "ContractCode",
+	enc{ST_VL, 65}: "ContractData",
+	enc{ST_VL, 66}: "ContractTxs",
+	enc{ST_VL, 67}: "ContractLogs",
 	enc{ST_VL, 68}: "SchemaName",
 	enc{ST_VL, 69}: "Endpoint",
+	enc{ST_VL, 75}: "ContractDetailMsg",
 	// account
 	enc{ST_ACCOUNT, 1}:  "Account",
 	enc{ST_ACCOUNT, 2}:  "Owner",
@@ -216,6 +224,8 @@ var encodings = map[enc]string{
 	enc{ST_ACCOUNT, 6}:  "Unauthorize",
 	enc{ST_ACCOUNT, 7}:  "Target",
 	enc{ST_ACCOUNT, 8}:  "RegularKey",
+	enc{ST_ACCOUNT, 51}: "OriginalAddress",
+	enc{ST_ACCOUNT, 52}: "ContractAddress",
 	enc{ST_ACCOUNT, 53}: "SchemaAdmin",
 	// inner object
 	enc{ST_OBJECT, 1}:  "EndOfObject",
