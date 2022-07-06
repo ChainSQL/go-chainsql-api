@@ -10,6 +10,7 @@ import (
 
 	"github.com/ChainSQL/go-chainsql-api/common"
 	"github.com/ChainSQL/go-chainsql-api/crypto"
+	"github.com/ChainSQL/go-chainsql-api/data"
 	"github.com/ChainSQL/go-chainsql-api/event"
 	"github.com/ChainSQL/go-chainsql-api/export"
 	"github.com/ChainSQL/go-chainsql-api/util"
@@ -136,6 +137,7 @@ func (c *Client) processMessage() {
 func (c *Client) handleClientMsg(msg string) {
 	// log.Printf("handleClientMsg: %s", msg)
 	msgType, err := jsonparser.GetString([]byte(msg), "type")
+	log.Println(msgType)
 	if err != nil {
 		fmt.Printf("handleClientMsg error:%s\n", err)
 	}
@@ -153,6 +155,8 @@ func (c *Client) handleClientMsg(msg string) {
 		c.onSingleTransaction(msg)
 	case "table":
 		c.onTableMsg(msg)
+	case "contract_event":
+		c.onContractMsg(msg)
 	default:
 		log.Printf("Unhandled message %s", msg)
 	}
@@ -194,6 +198,10 @@ func (c *Client) onTableMsg(msg string) {
 	c.Event.OnTableMsg(msg)
 }
 
+func (c *Client) onContractMsg(msg string) {
+	c.Event.OnContractMsg(msg)
+}
+
 // GetLedger request for ledger data
 func (c *Client) GetLedger(seq int) string {
 	type getLedger struct {
@@ -224,7 +232,6 @@ func (c *Client) GetLedgerTransactions(seq int, expand bool) string {
 	ledgerReq := &getLedgerTxs{
 		RequestBase: common.RequestBase{
 			Command: "ledger",
-			ID:      c.cmdIDs,
 		},
 		LedgerIndex:  seq,
 		Transactions: true,
@@ -247,7 +254,6 @@ func (c *Client) GetLedgerVersion() (int, error) {
 	ledgerReq := &ledgerVersionRequest{
 		RequestBase: common.RequestBase{
 			Command: "ledger",
-			ID:      c.cmdIDs,
 		},
 		LedgerIndex: "validated",
 	}
@@ -279,7 +285,7 @@ func (c *Client) GetLedgerCurrent() (int, error) {
 	request := c.syncRequest(ledgerReq)
 	err := c.parseResponseError(request)
 	if err != nil {
-		log.Println("GetLedgerVersion:", err)
+		log.Println("GetLedgerCurrent:", err)
 		return 0, err
 	}
 	ledgerIndex, err := jsonparser.GetInt([]byte(request.Response.Value), "result", "ledger_current_index")
@@ -394,6 +400,44 @@ func (c *Client) UnSubscribeTx(hash string) {
 	req.Command = "unsubscribe"
 	req.TxHash = hash
 	c.syncRequest(&req)
+}
+
+//SubscribeCtrAddr subscribe a contract by address
+func (c *Client) SubscribeCtrAddr(address string, ok bool) {
+	c.Event.SubscribeCtrAddr(address, ok)
+
+	type SubCtrAddrReq struct {
+		common.RequestBase
+		ContractAddr [1]string `json:"accounts_contract"`
+	}
+
+	ctrAddrArray := [1]string{address}
+	req := SubCtrAddrReq{}
+	req.Command = "subscribe"
+	req.ContractAddr = ctrAddrArray
+	c.syncRequest(&req)
+}
+
+//UnSubscribeCtrAddr unsubscribe a contract by address
+func (c *Client) UnSubscribeCtrAddr(address string) {
+	c.Event.UnSubscribeCtrAddr(address)
+
+	type SubCtrAddrReq struct {
+		common.RequestBase
+		ContractAddr string `json:"accounts_contract"`
+	}
+	req := SubCtrAddrReq{}
+	req.Command = "unsubscribe"
+	req.ContractAddr = address
+	c.syncRequest(&req)
+}
+
+func (c *Client) RegisterCtrEvent(eventSign string, contractMsgCh chan *data.Log) {
+	c.Event.RegisterCtrEvent(eventSign, contractMsgCh)
+}
+
+func (c *Client) UnRegisterCtrEvent(eventSign string, contractMsgCh chan *data.Log) {
+	c.Event.UnRegisterCtrEvent(eventSign, contractMsgCh)
 }
 
 func (c *Client) GetTableData(dataJSON interface{}, bSql bool) (string, error) {

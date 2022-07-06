@@ -96,6 +96,8 @@ import (
 	"github.com/ChainSQL/go-chainsql-api/abigen/abi/bind"
 	"github.com/ChainSQL/go-chainsql-api/common"
 	"github.com/ChainSQL/go-chainsql-api/core"
+	"github.com/ChainSQL/go-chainsql-api/data"
+	"github.com/ChainSQL/go-chainsql-api/event"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -427,8 +429,8 @@ var (
 			contract *core.BoundContract // Generic contract to use for unpacking event data
 			event    string              // Event name to use for unpacking event data
 
-			logs chan types.Log        // Log channel receiving the found contract events
-			sub  ChainSQL.Subscription // Subscription for errors, completion and termination
+			logs chan data.Log        // Log channel receiving the found contract events
+			sub  event.Subscription // Subscription for errors, completion and termination
 			done bool                  // Whether the subscription completed delivering logs
 			fail error                 // Occurred error to stop iteration
 		}
@@ -487,51 +489,51 @@ var (
 		// {{$contract.Type}}{{.Normalized.Name}} represents a {{.Normalized.Name}} event raised by the {{$contract.Type}} contract.
 		type {{$contract.Type}}{{.Normalized.Name}} struct { {{range .Normalized.Inputs}}
 			{{capitalise .Name}} {{if .Indexed}}{{bindtopictype .Type $structs}}{{else}}{{bindtype .Type $structs}}{{end}}; {{end}}
-			Raw types.Log // Blockchain specific contextual infos
+			Raw data.Log // Blockchain specific contextual infos
 		}
 
 		// Filter{{.Normalized.Name}} is a free log retrieval operation binding the contract event 0x{{printf "%x" .Original.ID}}.
 		//
 		// Solidity: {{.Original.String}}
- 		func (_{{$contract.Type}} *{{$contract.Type}}Filterer) Filter{{.Normalized.Name}}(opts *core.FilterOpts{{range .Normalized.Inputs}}{{if .Indexed}}, {{.Name}} []{{bindtype .Type $structs}}{{end}}{{end}}) (*{{$contract.Type}}{{.Normalized.Name}}Iterator, error) {
-			{{range .Normalized.Inputs}}
-			{{if .Indexed}}var {{.Name}}Rule []interface{}
-			for _, {{.Name}}Item := range {{.Name}} {
-				{{.Name}}Rule = append({{.Name}}Rule, {{.Name}}Item)
-			}{{end}}{{end}}
+ 		// func (_{{$contract.Type}} *{{$contract.Type}}Filterer) Filter{{.Normalized.Name}}(opts *core.FilterOpts{{range .Normalized.Inputs}}{{if .Indexed}}, {{.Name}} []{{bindtype .Type $structs}}{{end}}{{end}}) (*{{$contract.Type}}{{.Normalized.Name}}Iterator, error) {
+		// 	{{range .Normalized.Inputs}}
+		// 	{{if .Indexed}}var {{.Name}}Rule []interface{}
+		// 	for _, {{.Name}}Item := range {{.Name}} {
+		// 		{{.Name}}Rule = append({{.Name}}Rule, {{.Name}}Item)
+		// 	}{{end}}{{end}}
 
-			logs, sub, err := _{{$contract.Type}}.contract.FilterLogs(opts, "{{.Original.Name}}"{{range .Normalized.Inputs}}{{if .Indexed}}, {{.Name}}Rule{{end}}{{end}})
-			if err != nil {
-				return nil, err
-			}
-			return &{{$contract.Type}}{{.Normalized.Name}}Iterator{contract: _{{$contract.Type}}.contract, event: "{{.Original.Name}}", logs: logs, sub: sub}, nil
- 		}
+		// 	logs, sub, err := _{{$contract.Type}}.contract.FilterLogs(opts, "{{.Original.Name}}"{{range .Normalized.Inputs}}{{if .Indexed}}, {{.Name}}Rule{{end}}{{end}})
+		// 	if err != nil {
+		// 		return nil, err
+		// 	}
+		// 	return &{{$contract.Type}}{{.Normalized.Name}}Iterator{contract: _{{$contract.Type}}.contract, event: "{{.Original.Name}}", logs: logs, sub: sub}, nil
+ 		// }
 
 		// Watch{{.Normalized.Name}} is a free log subscription operation binding the contract event 0x{{printf "%x" .Original.ID}}.
 		//
 		// Solidity: {{.Original.String}}
-		func (_{{$contract.Type}} *{{$contract.Type}}Filterer) Watch{{.Normalized.Name}}(opts *bind.WatchOpts, sink chan<- *{{$contract.Type}}{{.Normalized.Name}}{{range .Normalized.Inputs}}{{if .Indexed}}, {{.Name}} []{{bindtype .Type $structs}}{{end}}{{end}}) (event.Subscription, error) {
+		func (_{{$contract.Type}} *{{$contract.Type}}Filterer) Watch{{.Normalized.Name}}(opts *core.WatchOpts, sink chan<- *{{$contract.Type}}{{.Normalized.Name}}{{range .Normalized.Inputs}}{{if .Indexed}}, {{.Name}} []{{bindtype .Type $structs}}{{end}}{{end}}) (event.Subscription, error) {
 			{{range .Normalized.Inputs}}
 			{{if .Indexed}}var {{.Name}}Rule []interface{}
 			for _, {{.Name}}Item := range {{.Name}} {
 				{{.Name}}Rule = append({{.Name}}Rule, {{.Name}}Item)
 			}{{end}}{{end}}
 
-			logs, sub, err := _{{$contract.Type}}.contract.WatchLogs(opts, "{{.Original.Name}}"{{range .Normalized.Inputs}}{{if .Indexed}}, {{.Name}}Rule{{end}}{{end}})
+			sub, err := _{{$contract.Type}}.contract.WatchLogs(opts, "{{.Original.Name}}"{{range .Normalized.Inputs}}{{if .Indexed}}, {{.Name}}Rule{{end}}{{end}})
 			if err != nil {
 				return nil, err
 			}
 			return event.NewSubscription(func(quit <-chan struct{}) error {
-				defer sub.Unsubscribe()
+				defer sub.UnSubscribe()
 				for {
 					select {
-					case log := <-logs:
+					case log := <-sub.EventMsgCh:
 						// New log arrived, parse the event and forward to the user
 						event := new({{$contract.Type}}{{.Normalized.Name}})
-						if err := _{{$contract.Type}}.contract.UnpackLog(event, "{{.Original.Name}}", log); err != nil {
+						if err := _{{$contract.Type}}.contract.UnpackLog(event, "{{.Original.Name}}", *log); err != nil {
 							return err
 						}
-						event.Raw = log
+						event.Raw = *log
 
 						select {
 						case sink <- event:
@@ -552,7 +554,7 @@ var (
 		// Parse{{.Normalized.Name}} is a log parse operation binding the contract event 0x{{printf "%x" .Original.ID}}.
 		//
 		// Solidity: {{.Original.String}}
-		func (_{{$contract.Type}} *{{$contract.Type}}Filterer) Parse{{.Normalized.Name}}(log types.Log) (*{{$contract.Type}}{{.Normalized.Name}}, error) {
+		func (_{{$contract.Type}} *{{$contract.Type}}Filterer) Parse{{.Normalized.Name}}(log data.Log) (*{{$contract.Type}}{{.Normalized.Name}}, error) {
 			event := new({{$contract.Type}}{{.Normalized.Name}})
 			if err := _{{$contract.Type}}.contract.UnpackLog(event, "{{.Original.Name}}", log); err != nil {
 				return nil, err

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"math/big"
+	"sync"
 	"time"
 
 	"github.com/ChainSQL/go-chainsql-api/core"
@@ -85,8 +86,8 @@ func main() {
 	// testGenerateAccount(c)
 	//testInsert(c)
 	// testGetLedger(c)
-	testGetLedgerTxs(c)
-	testGetLedgerVersion(c)
+	// testGetLedgerTxs(c)
+	// testGetLedgerVersion(c)
 	// testSignPlainText(c)
 
 	// testGetTableData(c)
@@ -308,9 +309,10 @@ func testGetServerInfo(c *core.Chainsql) {
 
 func testContract(c *core.Chainsql) {
 	// testDeployContract(c)
+	waitEvent := new(sync.WaitGroup)
 
-	contractAddr := "zMdM8JQKh8B9jVxzZn4w3zzw8UJTSCL1mi"
-	testInvokeContract(c, contractAddr)
+	contractAddr := "zwbCuvYRupsr2MRUMyTrz1eft28RewQuQJ"
+	testInvokeContract(c, contractAddr, waitEvent)
 }
 func testDeployContract(c *core.Chainsql) {
 	transactOpt := &core.TransactOpts{
@@ -322,12 +324,13 @@ func testDeployContract(c *core.Chainsql) {
 	deployRet, _, _ := storage.DeployStorage(c, transactOpt)
 	log.Println(deployRet)
 }
-func testInvokeContract(c *core.Chainsql, contractAddr string) {
+func testInvokeContract(c *core.Chainsql, contractAddr string, waitEvent *sync.WaitGroup) {
 	storageIns, _ := storage.NewStorage(c, contractAddr)
 
-	testCallContract(c, storageIns)
+	// testCallContract(c, storageIns)
+	testEventContract(c, storageIns)
 	testSubmitContract(c, storageIns)
-	testCallContract(c, storageIns)
+	log.Println("finish all")
 }
 func testCallContract(c *core.Chainsql, storageIns *storage.Storage) {
 	callOpt := &core.CallOpts{}
@@ -347,6 +350,20 @@ func testSubmitContract(c *core.Chainsql, storageIns *storage.Storage) {
 	} else {
 		log.Println(ret)
 	}
+}
+func testEventContract(c *core.Chainsql, storageIns *storage.Storage) {
+	watchOpt := &core.WatchOpts{}
+	sinkCh := make(chan *storage.StorageNumberChanges)
+	event, err := storageIns.WatchNumberChanges(watchOpt, sinkCh)
+	if err != nil {
+		event.Unsubscribe()
+	}
+	go func() {
+		for logInfo := range sinkCh {
+			log.Println(logInfo)
+		}
+	}()
+	// event.Unsubscribe()
 }
 
 func testPay(c *core.Chainsql) {

@@ -69,7 +69,7 @@ func PrepareLastLedgerSeqAndFee(client *Client) (int64, uint32, error) {
 		lastLedgerSeq = uint32(client.ServerInfo.LedgerIndex + LastLedgerSeqOffset)
 		fee = int64(client.ServerInfo.ComputeFee())
 	} else {
-		ledgerIndex, err := client.GetLedgerVersion()
+		ledgerIndex, err := client.GetLedgerCurrent()
 		if err != nil {
 			return 0, 0, err
 		}

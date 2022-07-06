@@ -21,6 +21,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"sync"
 
@@ -28,7 +29,9 @@ import (
 	. "github.com/ChainSQL/go-chainsql-api/abigen/abi/bind"
 	"github.com/ChainSQL/go-chainsql-api/common"
 	"github.com/ChainSQL/go-chainsql-api/crypto"
+	"github.com/ChainSQL/go-chainsql-api/data"
 	. "github.com/ChainSQL/go-chainsql-api/data"
+	"github.com/ChainSQL/go-chainsql-api/export"
 	"github.com/ChainSQL/go-chainsql-api/net"
 	"github.com/buger/jsonparser"
 )
@@ -113,8 +116,10 @@ type BoundContract struct {
 	transactor ContractTransactor // Write interface to interact with the blockchain
 	filterer   ContractFilterer   // Event filtering to interact with the blockchain
 	TransactOpts
-	ContractOpType uint16
-	ContractData   []byte
+	ContractOpType   uint16
+	ContractData     []byte
+	isFirstSubscribe bool
+	ctrEventCache    map[string]export.Callback
 }
 
 // NewBoundContract creates a low level contract interface through which calls
@@ -129,9 +134,10 @@ func NewBoundContract(chainsql *Chainsql, address string, abi abi.ABI) *BoundCon
 	// 	filterer:   filterer,
 	// }
 	bCtr := &BoundContract{
-		address:        address,
-		abi:            abi,
-		ContractOpType: 2,
+		address:          address,
+		abi:              abi,
+		ContractOpType:   2,
+		isFirstSubscribe: true,
 	}
 	bCtr.client = chainsql.client
 	bCtr.IPrepare = bCtr
@@ -432,56 +438,79 @@ func (c *BoundContract) transact(opts *TransactOpts, input []byte) (*common.TxRe
 // 	}
 // 	return logs, sub, nil
 // }
+type EventSub struct {
+	eventSign  string
+	EventMsgCh chan *data.Log
+	err        chan error
+	ctr        *BoundContract
+}
 
-// // WatchLogs filters subscribes to contract logs for future blocks, returning a
-// // subscription object that can be used to tear down the watcher.
-// func (c *BoundContract) WatchLogs(opts *WatchOpts, name string, query ...[]interface{}) (chan types.Log, event.Subscription, error) {
-// 	// Don't crash on a lazy user
-// 	if opts == nil {
-// 		opts = new(WatchOpts)
-// 	}
-// 	// Append the event selector to the query parameters and construct the topic set
-// 	query = append([][]interface{}{{c.abi.Events[name].ID}}, query...)
+func (e *EventSub) UnSubscribe() {
+	e.ctr.client.UnRegisterCtrEvent(e.eventSign, e.EventMsgCh)
+}
 
-// 	topics, err := abi.MakeTopics(query...)
-// 	if err != nil {
-// 		return nil, nil, err
-// 	}
-// 	// Start the background filtering
-// 	logs := make(chan types.Log, 128)
+func (e *EventSub) Err() chan error {
+	return e.err
+}
 
-// 	config := ethereum.FilterQuery{
-// 		Addresses: []common.Address{c.address},
-// 		Topics:    topics,
-// 	}
-// 	if opts.Start != nil {
-// 		config.FromBlock = new(big.Int).SetUint64(*opts.Start)
-// 	}
-// 	sub, err := c.filterer.SubscribeFilterLogs(ensureContext(opts.Context), config, logs)
-// 	if err != nil {
-// 		return nil, nil, err
-// 	}
-// 	return logs, sub, nil
-// }
+// WatchLogs filters subscribes to contract logs for future blocks, returning a
+// subscription object that can be used to tear down the watcher.
+// func (c *BoundContract) WatchLogs(opts *WatchOpts, name string, query ...[]interface{}) (chan data.Log, event.Subscription, error) {
+func (c *BoundContract) WatchLogs(opts *WatchOpts, name string, query ...[]interface{}) (*EventSub, error) {
+	// Don't crash on a lazy user
+	if opts == nil {
+		opts = new(WatchOpts)
+	}
+	// Append the event selector to the query parameters and construct the topic set
+	query = append([][]interface{}{{c.abi.Events[name].ID}}, query...)
 
-// // UnpackLog unpacks a retrieved log into the provided output structure.
-// func (c *BoundContract) UnpackLog(out interface{}, event string, log types.Log) error {
-// 	if log.Topics[0] != c.abi.Events[event].ID {
-// 		return fmt.Errorf("event signature mismatch")
-// 	}
-// 	if len(log.Data) > 0 {
-// 		if err := c.abi.UnpackIntoInterface(out, event, log.Data); err != nil {
-// 			return err
-// 		}
-// 	}
-// 	var indexed abi.Arguments
-// 	for _, arg := range c.abi.Events[event].Inputs {
-// 		if arg.Indexed {
-// 			indexed = append(indexed, arg)
-// 		}
-// 	}
-// 	return abi.ParseTopics(out, indexed, log.Topics[1:])
-// }
+	topics, err := abi.MakeTopics(query...)
+	if err != nil {
+		return nil, err
+	}
+	log.Println(topics[0][0])
+
+	// Start the background filtering
+	// logs := make(chan data.Log, 128)
+
+	if c.isFirstSubscribe {
+		c.client.SubscribeCtrAddr(c.address, true)
+		c.isFirstSubscribe = false
+	}
+
+	eventMsgCh := make(chan *data.Log)
+	errCh := make(chan error)
+	eventSig := topics[0][0].String()
+	c.client.RegisterCtrEvent(eventSig, eventMsgCh)
+
+	sub := &EventSub{
+		eventSign:  eventSig,
+		EventMsgCh: eventMsgCh,
+		ctr:        c,
+		err:        errCh,
+	}
+
+	return sub, nil
+}
+
+// UnpackLog unpacks a retrieved log into the provided output structure.
+func (c *BoundContract) UnpackLog(out interface{}, event string, log data.Log) error {
+	if log.Topics[0] != c.abi.Events[event].ID {
+		return fmt.Errorf("event signature mismatch")
+	}
+	if len(log.Data) > 0 {
+		if err := c.abi.UnpackIntoInterface(out, event, log.Data); err != nil {
+			return err
+		}
+	}
+	var indexed abi.Arguments
+	for _, arg := range c.abi.Events[event].Inputs {
+		if arg.Indexed {
+			indexed = append(indexed, arg)
+		}
+	}
+	return abi.ParseTopics(out, indexed, log.Topics[1:])
+}
 
 // // UnpackLogIntoMap unpacks a retrieved log into the provided map.
 // func (c *BoundContract) UnpackLogIntoMap(out map[string]interface{}, event string, log types.Log) error {

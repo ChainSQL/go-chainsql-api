@@ -12,6 +12,8 @@ import (
 	"github.com/ChainSQL/go-chainsql-api/abigen/abi/bind"
 	"github.com/ChainSQL/go-chainsql-api/common"
 	"github.com/ChainSQL/go-chainsql-api/core"
+	"github.com/ChainSQL/go-chainsql-api/data"
+	"github.com/ChainSQL/go-chainsql-api/event"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -25,8 +27,8 @@ var (
 
 // StorageMetaData contains all meta data concerning the Storage contract.
 var StorageMetaData = &core.CtrMetaData{
-	ABI: "[{\"inputs\":[],\"name\":\"retrieve\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"num\",\"type\":\"uint256\"}],\"name\":\"store\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
-	Bin: "0x6080604052348015600f57600080fd5b5060838061001e6000396000f3fe6080604052348015600f57600080fd5b506004361060325760003560e01c80632e64cec11460375780636057361d14604c575b600080fd5b60005460405190815260200160405180910390f35b605c6057366004605e565b600055565b005b600060208284031215606f57600080fd5b503591905056fea164736f6c6343000805000a",
+	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"num\",\"type\":\"uint256\"}],\"name\":\"numberChanges\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"retrieve\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"num\",\"type\":\"uint256\"}],\"name\":\"store\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	Bin: "0x608060405234801561001057600080fd5b5060bd8061001f6000396000f3fe6080604052348015600f57600080fd5b506004361060325760003560e01c80632e64cec11460375780636057361d14604c575b600080fd5b60005460405190815260200160405180910390f35b605b60573660046098565b605d565b005b60008190556040518181527f1161d67e3e40d64da0f22f41054120b745a28aa25e65d98d153fbaf4d31952519060200160405180910390a150565b60006020828403121560a957600080fd5b503591905056fea164736f6c6343000805000a",
 }
 
 // StorageABI is the input ABI used to generate the binding from.
@@ -246,4 +248,140 @@ func (_Storage *StorageSession) Store(num *big.Int) (*common.TxResult, error) {
 // Solidity: function store(uint256 num) returns()
 func (_Storage *StorageTransactorSession) Store(num *big.Int) (*common.TxResult, error) {
 	return _Storage.Contract.Store(&_Storage.TransactOpts, num)
+}
+
+// StorageNumberChangesIterator is returned from FilterNumberChanges and is used to iterate over the raw logs and unpacked data for NumberChanges events raised by the Storage contract.
+type StorageNumberChangesIterator struct {
+	Event *StorageNumberChanges // Event containing the contract specifics and raw log
+
+	contract *core.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan data.Log      // Log channel receiving the found contract events
+	sub  event.Subscription // Subscription for errors, completion and termination
+	done bool               // Whether the subscription completed delivering logs
+	fail error              // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *StorageNumberChangesIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(StorageNumberChanges)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(StorageNumberChanges)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *StorageNumberChangesIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *StorageNumberChangesIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// StorageNumberChanges represents a NumberChanges event raised by the Storage contract.
+type StorageNumberChanges struct {
+	Num *big.Int
+	Raw data.Log // Blockchain specific contextual infos
+}
+
+// FilterNumberChanges is a free log retrieval operation binding the contract event 0x1161d67e3e40d64da0f22f41054120b745a28aa25e65d98d153fbaf4d3195251.
+//
+// Solidity: event numberChanges(uint256 num)
+// func (_Storage *StorageFilterer) FilterNumberChanges(opts *core.FilterOpts) (*StorageNumberChangesIterator, error) {
+//
+//
+
+// 	logs, sub, err := _Storage.contract.FilterLogs(opts, "numberChanges")
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return &StorageNumberChangesIterator{contract: _Storage.contract, event: "numberChanges", logs: logs, sub: sub}, nil
+// }
+
+// WatchNumberChanges is a free log subscription operation binding the contract event 0x1161d67e3e40d64da0f22f41054120b745a28aa25e65d98d153fbaf4d3195251.
+//
+// Solidity: event numberChanges(uint256 num)
+func (_Storage *StorageFilterer) WatchNumberChanges(opts *core.WatchOpts, sink chan<- *StorageNumberChanges) (event.Subscription, error) {
+
+	sub, err := _Storage.contract.WatchLogs(opts, "numberChanges")
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.UnSubscribe()
+		for {
+			select {
+			case log := <-sub.EventMsgCh:
+				// New log arrived, parse the event and forward to the user
+				event := new(StorageNumberChanges)
+				if err := _Storage.contract.UnpackLog(event, "numberChanges", *log); err != nil {
+					return err
+				}
+				event.Raw = *log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseNumberChanges is a log parse operation binding the contract event 0x1161d67e3e40d64da0f22f41054120b745a28aa25e65d98d153fbaf4d3195251.
+//
+// Solidity: event numberChanges(uint256 num)
+func (_Storage *StorageFilterer) ParseNumberChanges(log data.Log) (*StorageNumberChanges, error) {
+	event := new(StorageNumberChanges)
+	if err := _Storage.contract.UnpackLog(event, "numberChanges", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
 }

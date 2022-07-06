@@ -396,18 +396,9 @@ func (c *Chainsql) prepareTxBase(tx Signer) (Signer, error) {
 		return nil, err
 	}
 
-	var fee int64 = 10
-	var last uint32
-	if c.client.ServerInfo.Updated {
-		last = uint32(c.client.ServerInfo.LedgerIndex + util.Seqinterval)
-		fee = int64(c.client.ServerInfo.ComputeFee())
-	} else {
-		ledgerIndex, err := c.client.GetLedgerCurrent()
-		if err != nil {
-			return nil, err
-		}
-		last = uint32(ledgerIndex + util.Seqinterval)
-		fee = 50
+	fee, lastLedgerSeq, err := net.PrepareLastLedgerSeqAndFee(c.client)
+	if err != nil {
+		return nil, err
 	}
 
 	if tx.GetRaw() != "" {
@@ -424,7 +415,7 @@ func (c *Chainsql) prepareTxBase(tx Signer) (Signer, error) {
 	if err != nil {
 		return nil, err
 	}
-	tx.SetTxBase(seq, *finalFee, &last, *account)
+	tx.SetTxBase(seq, *finalFee, &lastLedgerSeq, *account)
 	return tx, nil
 }
 

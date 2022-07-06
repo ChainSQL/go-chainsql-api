@@ -1,5 +1,18 @@
 [
 	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "num",
+				"type": "uint256"
+			}
+		],
+		"name": "numberChanges",
+		"type": "event"
+	},
+	{
 		"inputs": [],
 		"name": "retrieve",
 		"outputs": [
