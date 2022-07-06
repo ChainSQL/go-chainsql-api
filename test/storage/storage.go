@@ -374,6 +374,31 @@ func (_Storage *StorageFilterer) WatchNumberChanges(opts *core.WatchOpts, sink c
 	}), nil
 }
 
+func (_Storage *StorageFilterer) GetPastEvent(txHash string, ContractLogs string) ([]*StorageNumberChanges, error) {
+	var logRaws []*data.Log
+	var err error
+	if ContractLogs != "" {
+		logRaws, err = _Storage.contract.GetPastEventByCtrLog(ContractLogs)
+	} else if txHash != "" {
+		logRaws, err = _Storage.contract.GetPastEventByTxHash(txHash)
+	} else {
+		return nil, errors.New("both txHash or ContractLogs is not provided for param")
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	var events []*StorageNumberChanges
+	for _, logRaw := range logRaws {
+		event, err := _Storage.ParseNumberChanges(*logRaw)
+		if err != nil {
+			return nil, err
+		}
+		events = append(events, event)
+	}
+	return events, nil
+}
+
 // ParseNumberChanges is a log parse operation binding the contract event 0x1161d67e3e40d64da0f22f41054120b745a28aa25e65d98d153fbaf4d3195251.
 //
 // Solidity: event numberChanges(uint256 num)

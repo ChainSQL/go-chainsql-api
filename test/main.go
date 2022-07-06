@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"math/big"
-	"sync"
 	"time"
 
 	"github.com/ChainSQL/go-chainsql-api/core"
@@ -309,10 +308,9 @@ func testGetServerInfo(c *core.Chainsql) {
 
 func testContract(c *core.Chainsql) {
 	// testDeployContract(c)
-	waitEvent := new(sync.WaitGroup)
 
 	contractAddr := "zwbCuvYRupsr2MRUMyTrz1eft28RewQuQJ"
-	testInvokeContract(c, contractAddr, waitEvent)
+	testInvokeContract(c, contractAddr)
 }
 func testDeployContract(c *core.Chainsql) {
 	transactOpt := &core.TransactOpts{
@@ -324,12 +322,13 @@ func testDeployContract(c *core.Chainsql) {
 	deployRet, _, _ := storage.DeployStorage(c, transactOpt)
 	log.Println(deployRet)
 }
-func testInvokeContract(c *core.Chainsql, contractAddr string, waitEvent *sync.WaitGroup) {
+func testInvokeContract(c *core.Chainsql, contractAddr string) {
 	storageIns, _ := storage.NewStorage(c, contractAddr)
 
 	// testCallContract(c, storageIns)
-	testEventContract(c, storageIns)
-	testSubmitContract(c, storageIns)
+	// testEventContract(c, storageIns)
+	// testSubmitContract(c, storageIns)
+	testGetPastEvent(c, storageIns)
 	log.Println("finish all")
 }
 func testCallContract(c *core.Chainsql, storageIns *storage.Storage) {
@@ -364,6 +363,18 @@ func testEventContract(c *core.Chainsql, storageIns *storage.Storage) {
 		}
 	}()
 	// event.Unsubscribe()
+}
+
+func testGetPastEvent(c *core.Chainsql, storageIns *storage.Storage) {
+	// eventLogs, err := storageIns.GetPastEvent("283CC2AF0AC3913FD07D9967891DCEB3B95B39D85E09429D202588B1CA9B1C42", "")
+	eventLogs, err := storageIns.GetPastEvent("", "5B0A2020207B0A20202020202022636F6E74726163745F6461746122203A202230303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030333135222C0A20202020202022636F6E74726163745F746F7069637322203A205B20223131363144363745334534304436344441304632324634313035343132304237343541323841413235453635443938443135334642414634443331393532353122205D0A2020207D0A5D0A")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	for _, eventLog := range eventLogs {
+		log.Println(eventLog)
+	}
 }
 
 func testPay(c *core.Chainsql) {
@@ -416,7 +427,7 @@ func testStartSchema(c *core.Chainsql) {
 }
 
 func testGetTransaction(c *core.Chainsql) {
-	txHash := "AEE4C7AA7558FD5C31C89E6F9F4491B9933FBB365A9FA3C02FD9E677C4ED6A86"
+	txHash := "283CC2AF0AC3913FD07D9967891DCEB3B95B39D85E09429D202588B1CA9B1C42"
 	ret, err := c.GetTransaction(txHash)
 	log.Println(ret)
 	log.Println(err)

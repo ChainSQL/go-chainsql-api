@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -491,6 +492,69 @@ func (c *BoundContract) WatchLogs(opts *WatchOpts, name string, query ...[]inter
 	}
 
 	return sub, nil
+}
+
+func (c *BoundContract) GetPastEventByCtrLog(ContractLogs string) ([]*data.Log, error) {
+	contractLogsHexBytes, _ := hex.DecodeString(ContractLogs)
+	contractLogsStr := string(contractLogsHexBytes)
+
+	reg1 := regexp.MustCompile(`^\[|\n|\s+|]$`)
+	contractLogsStr1 := reg1.ReplaceAllString(contractLogsStr, "")
+	// log.Println(contractLogsStr1)
+	reg2 := regexp.MustCompile(`,{/`)
+	contractLogsStr2 := reg2.ReplaceAllString(contractLogsStr1, "-{")
+
+	ctrLogsArray := strings.Split(contractLogsStr2, `-`)
+
+	var newCtrLogs []*data.Log
+	for _, str := range ctrLogsArray {
+		logRaw := &data.Log{
+			Address: c.address,
+		}
+
+		contractData, err := jsonparser.GetString([]byte(str), "contract_data")
+		if err != nil {
+			return nil, err
+		}
+		ctrEventDataHex, err := hex.DecodeString(contractData)
+		if err != nil {
+			return nil, err
+		}
+		logRaw.Data = ctrEventDataHex
+		contractTopics, _, _, err := jsonparser.Get([]byte(str), "contract_topics")
+		if err != nil {
+			return nil, err
+		}
+		_, _ = jsonparser.ArrayEach(contractTopics, func(value []byte, dataType jsonparser.ValueType, offset int, errin error) {
+			valueStr := string(value)
+			valueHex, err := hex.DecodeString(valueStr)
+			if err != nil {
+				return
+			}
+			logRaw.Topics = append(logRaw.Topics, common.BytesToHash(valueHex))
+		})
+		newCtrLogs = append(newCtrLogs, logRaw)
+	}
+
+	return newCtrLogs, nil
+}
+
+func (c *BoundContract) GetPastEventByTxHash(txHash string) ([]*data.Log, error) {
+	if txHash == "" {
+		return nil, errors.New("txHash is empty")
+	}
+
+	txDetailStr, err := c.client.GetTransaction(txHash)
+	if err != nil {
+		return nil, err
+	}
+	// log.Println(txDetailStr)
+	ContractLogs, err := jsonparser.GetString([]byte(txDetailStr), "result", "meta", "ContractLogs")
+	if err != nil {
+		return nil, err
+	}
+
+	return c.GetPastEventByCtrLog(ContractLogs)
 }
 
 // UnpackLog unpacks a retrieved log into the provided output structure.

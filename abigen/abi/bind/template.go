@@ -551,6 +551,31 @@ var (
 			}), nil
 		}
 
+		func (_{{$contract.Type}} *{{$contract.Type}}Filterer) GetPastEvent(txHash string, ContractLogs string) ([]*{{$contract.Type}}{{.Normalized.Name}}, error) {
+			var logRaws [] *data.Log
+			var err error
+			if ContractLogs != "" {
+				logRaws, err = _{{$contract.Type}}.contract.GetPastEventByCtrLog(ContractLogs)
+			} else if txHash != "" {
+				logRaws, err = _{{$contract.Type}}.contract.GetPastEventByTxHash(txHash)
+			} else {
+				return nil, errors.New("both txHash or ContractLogs is not provided for param")
+			}
+		
+			if err != nil {
+				return nil, err
+			}
+			var events []*{{$contract.Type}}{{.Normalized.Name}}
+			for _, logRaw := range logRaws {
+				event, err := _{{$contract.Type}}.ParseNumberChanges(*logRaw)
+				if err != nil {
+					return nil, err
+				}
+				events = append(events, event)
+			}
+			return events, nil
+		}
+		
 		// Parse{{.Normalized.Name}} is a log parse operation binding the contract event 0x{{printf "%x" .Original.ID}}.
 		//
 		// Solidity: {{.Original.String}}
