@@ -221,7 +221,6 @@ func (c *Client) GetLedgerTransactions(seq int, expand bool) string {
 		Transactions bool `json:"transactions"`
 		Expand       bool `json:"expand"`
 	}
-	c.cmdIDs++
 	ledgerReq := &getLedgerTxs{
 		RequestBase: common.RequestBase{
 			Command: "ledger",
@@ -245,7 +244,6 @@ func (c *Client) GetLedgerVersion() (int, error) {
 		common.RequestBase
 		LedgerIndex string `json:"ledger_index"`
 	}
-	c.cmdIDs++
 	ledgerReq := &ledgerVersionRequest{
 		RequestBase: common.RequestBase{
 			Command: "ledger",
@@ -458,7 +456,9 @@ func (c *Client) SyncRequest(v common.IRequest) *Request {
 }
 
 func (c *Client) syncRequest(v common.IRequest) *Request {
+	c.mutex.Lock()
 	c.cmdIDs++
+	c.mutex.Unlock()
 	if v.GetID() == 0 {
 		v.SetID(c.cmdIDs)
 	}

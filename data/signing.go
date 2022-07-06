@@ -17,11 +17,12 @@ func Sign(s Signer, key crypto.Key, sequence *uint32, keyType common.KeyType) er
 		return err
 	}
 	*s.GetSignature() = VariableLength(sig)
-	hash, _, err = Raw(s,keyType)
+	hash, blob, err := Raw(s, keyType)
 	if err != nil {
 		return err
 	}
 	copy(s.GetHash().Bytes(), hash.Bytes())
+	*s.GetBlob() = VariableLength(blob)
 	return nil
 }
 

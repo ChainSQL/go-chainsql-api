@@ -111,7 +111,7 @@ func writeRaw(w io.Writer, value interface{}, ignoreSigningFields bool, keyType 
 func encode(w io.Writer, value interface{}, ignoreSigningFields bool) error {
 	v := reflect.Indirect(reflect.ValueOf(value))
 	fields := getFields(&v, 0)
-	fmt.Println(fields.String())
+	// fmt.Println(fields.String())
 	return fields.Each(func(e enc, v interface{}) error {
 		if ignoreSigningFields && e.SigningField() {
 			return nil

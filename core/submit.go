@@ -97,16 +97,8 @@ func (s *SubmitBase) doSubmit() *TxResult {
 		}
 	}
 
-	_, blob, err := Raw(tx, key.Type())
-	if err != nil {
-		log.Printf("doSubmit error:%s\n", err)
-		return &TxResult{
-			ErrorCode:    "errSerialize",
-			ErrorMessage: err.Error(),
-		}
-	}
 	txSigned := &TxSigned{
-		blob: fmt.Sprintf("%X", blob),
+		blob: fmt.Sprintf("%X", *tx.GetBlob()),
 		hash: string(crypto.B2H32(*tx.GetHash())),
 	}
 

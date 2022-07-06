@@ -16,6 +16,7 @@ type TxBase struct {
 	PreviousTxnID      *Hash256        `json:",omitempty"`
 	LastLedgerSequence *uint32         `json:",omitempty"`
 	Hash               Hash256         `json:"hash"`
+	TxBlob             *VariableLength
 }
 
 type Payment struct {
@@ -241,6 +242,7 @@ func (t *TxBase) GetTransactionType() TransactionType { return t.TransactionType
 func (t *TxBase) Prefix() HashPrefix                  { return HP_TRANSACTION_ID }
 func (t *TxBase) GetPublicKey() *PublicKey            { return t.SigningPubKey }
 func (t *TxBase) GetSignature() *VariableLength       { return t.TxnSignature }
+func (t *TxBase) GetBlob() *VariableLength            { return t.TxBlob }
 func (t *TxBase) SigningPrefix() HashPrefix           { return HP_TRANSACTION_SIGN }
 func (t *TxBase) PathSet() PathSet                    { return PathSet(nil) }
 func (t *TxBase) GetHash() *Hash256                   { return &t.Hash }
@@ -276,6 +278,9 @@ func (t *TxBase) InitialiseForSigning(kType common.KeyType) {
 	}
 	if t.TxnSignature == nil {
 		t.TxnSignature = new(VariableLength)
+	}
+	if t.TxBlob == nil {
+		t.TxBlob = new(VariableLength)
 	}
 }
 

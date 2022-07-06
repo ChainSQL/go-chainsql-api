@@ -1,8 +1,9 @@
 package data
 
 import (
-	"github.com/ChainSQL/go-chainsql-api/common"
 	"io"
+
+	"github.com/ChainSQL/go-chainsql-api/common"
 )
 
 type Hashable interface {
@@ -17,6 +18,7 @@ type Signer interface {
 	SigningPrefix() HashPrefix
 	GetPublicKey() *PublicKey
 	GetSignature() *VariableLength
+	GetBlob() *VariableLength
 	SetTxBase(seq uint32, fee Value, astLedgerSequence *uint32, account Account)
 	GetRaw() string
 	GetStatements() string
