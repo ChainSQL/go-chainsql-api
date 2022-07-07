@@ -568,10 +568,12 @@ var (
 			var events []*{{$contract.Type}}{{.Normalized.Name}}
 			for _, logRaw := range logRaws {
 				event, err := _{{$contract.Type}}.Parse{{.Normalized.Name}}(*logRaw)
-				if err != nil {
+				if err != nil && err.Error() != "event signature mismatch" {
 					return nil, err
 				}
-				events = append(events, event)
+				if event != nil {
+					events = append(events, event)
+				}
 			}
 			return events, nil
 		}
