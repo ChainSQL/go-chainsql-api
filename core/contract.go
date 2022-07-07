@@ -549,6 +549,21 @@ func (c *BoundContract) GetPastEventByTxHash(txHash string) ([]*data.Log, error)
 		return nil, err
 	}
 	// log.Println(txDetailStr)
+
+	txType, err := jsonparser.GetString([]byte(txDetailStr), "result", "TransactionType")
+	if err != nil {
+		return nil, err
+	}
+	if txType != "Contract" {
+		return nil, errors.New("not a contract tx")
+	}
+	ctrAddr, err := jsonparser.GetString([]byte(txDetailStr), "result", "ContractAddress")
+	if err != nil {
+		return nil, err
+	}
+	if ctrAddr != c.address {
+		return nil, errors.New("the event is not belong to current contract")
+	}
 	ContractLogs, err := jsonparser.GetString([]byte(txDetailStr), "result", "meta", "ContractLogs")
 	if err != nil {
 		return nil, err

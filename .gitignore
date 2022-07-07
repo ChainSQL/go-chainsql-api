@@ -8,6 +8,8 @@ main
 # Test binary, built with `go test -c`
 *.test
 
+test/contracts
+
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 .DS_Store
