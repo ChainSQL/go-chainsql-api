@@ -374,7 +374,7 @@ func (_Storage *StorageFilterer) WatchNumberChanges(opts *core.WatchOpts, sink c
 	}), nil
 }
 
-func (_Storage *StorageFilterer) GetPastEvent(txHash string, ContractLogs string) ([]*StorageNumberChanges, error) {
+func (_Storage *StorageFilterer) GetNumberChangesPastEvent(txHash string, ContractLogs string) ([]*StorageNumberChanges, error) {
 	var logRaws []*data.Log
 	var err error
 	if ContractLogs != "" {

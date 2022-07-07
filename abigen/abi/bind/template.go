@@ -148,7 +148,7 @@ var (
 		var {{.Type}}Bin = {{.Type}}MetaData.Bin
 
 		// Deploy{{.Type}} deploys a new ChainSQL contract, binding an instance of {{.Type}} to it.
-		func Deploy{{.Type}}(chainsql *core.Chainsql, auth *core.TransactOpts, {{range .Constructor.Inputs}}, {{.Name}} {{bindtype .Type $structs}}{{end}}) (*core.DeployTxRet, *{{.Type}}, error) {
+		func Deploy{{.Type}}(chainsql *core.Chainsql, auth *core.TransactOpts {{range .Constructor.Inputs}}, {{.Name}} {{bindtype .Type $structs}}{{end}}) (*core.DeployTxRet, *{{.Type}}, error) {
 		  parsed, err := {{.Type}}MetaData.GetAbi()
 		  if err != nil {
 		    return &core.DeployTxRet{}, nil, err
@@ -160,11 +160,11 @@ var (
 			{{decapitalise $name}}Addr, _, _, _ := Deploy{{capitalise $name}}(chainsql, auth)
 			{{$contract.Type}}Bin = strings.ReplaceAll({{$contract.Type}}Bin, "__${{$pattern}}$__", {{decapitalise $name}}Addr.String()[2:])
 		  {{end}}
-		  deployRet, contract, err := core.DeployContract(chainsql, auth, *parsed, common.FromHex({{.Type}}Bin), {{range .Constructor.Inputs}}, {{.Name}}{{end}})
+		  deployRet, contract, err := core.DeployContract(chainsql, auth, *parsed, common.FromHex({{.Type}}Bin) {{range .Constructor.Inputs}}, {{.Name}}{{end}})
 		  if err != nil {
 		    return &core.DeployTxRet{}, nil, err
 		  }
-		  return deployRet, &Storage{StorageCaller: StorageCaller{contract: contract}, StorageTransactor: StorageTransactor{contract: contract}, StorageFilterer: StorageFilterer{contract: contract}}, nil
+		  return deployRet, &{{.Type}}{ {{.Type}}Caller: {{.Type}}Caller{contract: contract}, {{.Type}}Transactor: {{.Type}}Transactor{contract: contract}, {{.Type}}Filterer: {{.Type}}Filterer{contract: contract} }, nil
 		}
 	{{end}}
 
@@ -376,49 +376,49 @@ var (
 	{{end}}
 
 	{{if .Fallback}} 
-		// Fallback is a paid mutator transaction binding the contract fallback function.
-		//
-		// Solidity: {{.Fallback.Original.String}}
-		func (_{{$contract.Type}} *{{$contract.Type}}Transactor) Fallback(opts *core.TransactOpts, calldata []byte) (*types.Transaction, error) {
-			return _{{$contract.Type}}.contract.RawTransact(opts, calldata)
-		}
+		// // Fallback is a paid mutator transaction binding the contract fallback function.
+		// //
+		// // Solidity: {{.Fallback.Original.String}}
+		// func (_{{$contract.Type}} *{{$contract.Type}}Transactor) Fallback(opts *core.TransactOpts, calldata []byte) (*types.Transaction, error) {
+		// 	return _{{$contract.Type}}.contract.RawTransact(opts, calldata)
+		// }
 
-		// Fallback is a paid mutator transaction binding the contract fallback function.
-		//
-		// Solidity: {{.Fallback.Original.String}}
-		func (_{{$contract.Type}} *{{$contract.Type}}Session) Fallback(calldata []byte) (*types.Transaction, error) {
-		  return _{{$contract.Type}}.Contract.Fallback(&_{{$contract.Type}}.TransactOpts, calldata)
-		}
+		// // Fallback is a paid mutator transaction binding the contract fallback function.
+		// //
+		// // Solidity: {{.Fallback.Original.String}}
+		// func (_{{$contract.Type}} *{{$contract.Type}}Session) Fallback(calldata []byte) (*types.Transaction, error) {
+		//   return _{{$contract.Type}}.Contract.Fallback(&_{{$contract.Type}}.TransactOpts, calldata)
+		// }
 	
-		// Fallback is a paid mutator transaction binding the contract fallback function.
-		// 
-		// Solidity: {{.Fallback.Original.String}}
-		func (_{{$contract.Type}} *{{$contract.Type}}TransactorSession) Fallback(calldata []byte) (*types.Transaction, error) {
-		  return _{{$contract.Type}}.Contract.Fallback(&_{{$contract.Type}}.TransactOpts, calldata)
-		}
+		// // Fallback is a paid mutator transaction binding the contract fallback function.
+		// // 
+		// // Solidity: {{.Fallback.Original.String}}
+		// func (_{{$contract.Type}} *{{$contract.Type}}TransactorSession) Fallback(calldata []byte) (*types.Transaction, error) {
+		//   return _{{$contract.Type}}.Contract.Fallback(&_{{$contract.Type}}.TransactOpts, calldata)
+		// }
 	{{end}}
 
 	{{if .Receive}} 
-		// Receive is a paid mutator transaction binding the contract receive function.
-		//
-		// Solidity: {{.Receive.Original.String}}
-		func (_{{$contract.Type}} *{{$contract.Type}}Transactor) Receive(opts *core.TransactOpts) (*types.Transaction, error) {
-			return _{{$contract.Type}}.contract.RawTransact(opts, nil) // calldata is disallowed for receive function
-		}
+		// // Receive is a paid mutator transaction binding the contract receive function.
+		// //
+		// // Solidity: {{.Receive.Original.String}}
+		// func (_{{$contract.Type}} *{{$contract.Type}}Transactor) Receive(opts *core.TransactOpts) (*types.Transaction, error) {
+		// 	return _{{$contract.Type}}.contract.RawTransact(opts, nil) // calldata is disallowed for receive function
+		// }
 
-		// Receive is a paid mutator transaction binding the contract receive function.
-		//
-		// Solidity: {{.Receive.Original.String}}
-		func (_{{$contract.Type}} *{{$contract.Type}}Session) Receive() (*types.Transaction, error) {
-		  return _{{$contract.Type}}.Contract.Receive(&_{{$contract.Type}}.TransactOpts)
-		}
+		// // Receive is a paid mutator transaction binding the contract receive function.
+		// //
+		// // Solidity: {{.Receive.Original.String}}
+		// func (_{{$contract.Type}} *{{$contract.Type}}Session) Receive() (*types.Transaction, error) {
+		//   return _{{$contract.Type}}.Contract.Receive(&_{{$contract.Type}}.TransactOpts)
+		// }
 	
-		// Receive is a paid mutator transaction binding the contract receive function.
-		// 
-		// Solidity: {{.Receive.Original.String}}
-		func (_{{$contract.Type}} *{{$contract.Type}}TransactorSession) Receive() (*types.Transaction, error) {
-		  return _{{$contract.Type}}.Contract.Receive(&_{{$contract.Type}}.TransactOpts)
-		}
+		// // Receive is a paid mutator transaction binding the contract receive function.
+		// // 
+		// // Solidity: {{.Receive.Original.String}}
+		// func (_{{$contract.Type}} *{{$contract.Type}}TransactorSession) Receive() (*types.Transaction, error) {
+		//   return _{{$contract.Type}}.Contract.Receive(&_{{$contract.Type}}.TransactOpts)
+		// }
 	{{end}}
 
 	{{range .Events}}
@@ -551,7 +551,7 @@ var (
 			}), nil
 		}
 
-		func (_{{$contract.Type}} *{{$contract.Type}}Filterer) GetPastEvent(txHash string, ContractLogs string) ([]*{{$contract.Type}}{{.Normalized.Name}}, error) {
+		func (_{{$contract.Type}} *{{$contract.Type}}Filterer) Get{{.Normalized.Name}}PastEvent(txHash string, ContractLogs string) ([]*{{$contract.Type}}{{.Normalized.Name}}, error) {
 			var logRaws [] *data.Log
 			var err error
 			if ContractLogs != "" {
@@ -567,7 +567,7 @@ var (
 			}
 			var events []*{{$contract.Type}}{{.Normalized.Name}}
 			for _, logRaw := range logRaws {
-				event, err := _{{$contract.Type}}.ParseNumberChanges(*logRaw)
+				event, err := _{{$contract.Type}}.Parse{{.Normalized.Name}}(*logRaw)
 				if err != nil {
 					return nil, err
 				}
@@ -575,7 +575,7 @@ var (
 			}
 			return events, nil
 		}
-		
+
 		// Parse{{.Normalized.Name}} is a log parse operation binding the contract event 0x{{printf "%x" .Original.ID}}.
 		//
 		// Solidity: {{.Original.String}}
