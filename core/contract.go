@@ -239,8 +239,7 @@ func (c *BoundContract) Call(opts *CallOpts, results *[]interface{}, method stri
 
 		callReq.LedgerIndex = lastLedgerSeq - 20
 	}
-	// c.client.cmdIDs++
-	// callReq.ID = 2
+
 	callReq.Command = "contract_call"
 	request := c.client.SyncRequest(callReq)
 
@@ -557,13 +556,13 @@ func (c *BoundContract) GetPastEventByTxHash(txHash string) ([]*data.Log, error)
 	if txType != "Contract" {
 		return nil, errors.New("not a contract tx")
 	}
-	ctrAddr, err := jsonparser.GetString([]byte(txDetailStr), "result", "ContractAddress")
-	if err != nil {
-		return nil, err
-	}
-	if ctrAddr != c.address {
-		return nil, errors.New("the event is not belong to current contract")
-	}
+	// ctrAddr, err := jsonparser.GetString([]byte(txDetailStr), "result", "ContractAddress")
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// if ctrAddr != c.address {
+	// 	return nil, errors.New("the event is not belong to current contract")
+	// }
 	ContractLogs, err := jsonparser.GetString([]byte(txDetailStr), "result", "meta", "ContractLogs")
 	if err != nil {
 		return nil, err

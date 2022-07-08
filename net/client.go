@@ -137,7 +137,7 @@ func (c *Client) processMessage() {
 func (c *Client) handleClientMsg(msg string) {
 	// log.Printf("handleClientMsg: %s", msg)
 	msgType, err := jsonparser.GetString([]byte(msg), "type")
-	log.Println(msgType)
+	// log.Println(msgType)
 	if err != nil {
 		fmt.Printf("handleClientMsg error:%s\n", err)
 	}
