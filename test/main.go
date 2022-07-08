@@ -16,10 +16,12 @@ type Account struct {
 	address string
 	secret  string
 }
+
 var root1 = Account{
 	address: "zPHxWCKNZjpbQHV5DLpBy8rSR8HdXpPDzi",
 	secret:  "xp6FwxZP1rrmPy2GDTobvHTgnZnrC",
 }
+
 //zPHxWCKNZjpbQHV5DLpBy8rSR8HdXpPDzi
 //zEdmwPS5BoEukn1ech2LHjuV6STkq3QYkM
 var root = Account{
@@ -47,17 +49,16 @@ var tableName = "hello2"
 func main() {
 	c := core.NewChainsql()
 
-
 	serverName := "peer0.org1.example.com"
 	address := "wss://127.0.0.1:6006"
 	rootPath := "./certs/root/ca.crt"
 	clientCertPath := "./certs/client/client.crt"
 	clientKeyPath := "./certs/client/client.key"
 
-	// serverName = ""
-	// rootPath = ""
-	// clientCertPath = ""
-	// clientKeyPath = ""
+	serverName = ""
+	rootPath = ""
+	clientCertPath = ""
+	clientKeyPath = ""
 
 	err := c.Connect(address, rootPath, clientCertPath, clientKeyPath, serverName)
 	log.Println("IsConnected:", c.IsConnected())
@@ -69,8 +70,8 @@ func main() {
 	// 	address: "zHb9CJAWyB4zj91VRWn96DkukG4bwdtyTh",
 	// 	secret:  "xnoPBzXtMeMyMHUVTgbuqAfg1SUTb",
 	// }
-	c.As(root.address, root.secret)
-	//c.As(smRoot.address, smRoot.secret)
+	// c.As(root.address, root.secret)
+	c.As(smRoot.address, smRoot.secret)
 	//c.SetSchema("44C2C733C17335C11B01BCB0B55340EA422F37307188FF84E6127F8BEBBF0C60")
 	//GenerateKey(rand.Reader)
 	// c.Use(root.address)
@@ -88,8 +89,8 @@ func main() {
 	// testTickerGet(c)\
 	//testValidationCreate(c)
 	//testGetAccountInfo(c)
-	//testGetServerInfo(c)
-	//testPay(c)
+	testGetServerInfo(c)
+	// testPay(c)
 	//testSchemaCreate(c) //创建子链
 	//testSchemaModify(c) // 修改子链
 	//testGetSchemaList(c) //获取子链列表
@@ -101,7 +102,7 @@ func main() {
 	//testGetSchemaId(c)
 	//testGenerateAddress(c)
 	//testDeleteSchema(c)
-	testGetTransactionResult(c)
+	// testGetTransactionResult(c)
 	for {
 		time.Sleep(time.Second * 10)
 	}
@@ -366,7 +367,6 @@ func testDeleteSchema(c *core.Chainsql) {
 	log.Println(ret)
 }
 
-
 func testGetTransactionResult(c *core.Chainsql) {
 	txHash := "48AF80C9169790BE33CBD8C5F32151C9D4483D855B195D188854636EB6551AF5"
 	ret, err := c.GetTransactionResult(txHash)
@@ -377,4 +377,3 @@ func testGetTransactionResult(c *core.Chainsql) {
 		log.Println(ret)
 	}
 }
-

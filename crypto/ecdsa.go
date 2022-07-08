@@ -1,7 +1,6 @@
 package crypto
 
 import (
-	"crypto/elliptic"
 	"crypto/rand"
 	"encoding/binary"
 	"math/big"
@@ -38,8 +37,8 @@ func newKey(seed []byte) *btcec.PrivateKey {
 		}
 		key.SetBytes(Sha512Half(finalBytes))
 		if key.Cmp(zero) > 0 && key.Cmp(order) < 0 {
-			privKey, _ := btcec.PrivKeyFromBytes(elliptic.S256(), key.Bytes())
-			//privKey, _ := btcec.PrivKeyFromBytes(btcec.S256(), key.Bytes())
+			// privKey, _ := btcec.PrivKeyFromBytes(elliptic.S256(), key.Bytes())
+			privKey, _ := btcec.PrivKeyFromBytes(btcec.S256(), key.Bytes())
 			return privKey
 		}
 	}
