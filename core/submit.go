@@ -47,7 +47,11 @@ type SubmitBase struct {
 // }
 // Submit submit a tx with a cocurrent expect
 func (s *SubmitBase) Submit(cond string) (txRet *TxResult) {
-	s.expect = cond
+	if cond == "" {
+		s.expect = util.SendSuccess
+	} else {
+		s.expect = cond
+	}
 	return s.doSubmit()
 }
 

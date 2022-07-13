@@ -34,6 +34,7 @@ import (
 	. "github.com/ChainSQL/go-chainsql-api/data"
 	"github.com/ChainSQL/go-chainsql-api/export"
 	"github.com/ChainSQL/go-chainsql-api/net"
+	"github.com/ChainSQL/go-chainsql-api/util"
 	"github.com/buger/jsonparser"
 )
 
@@ -157,6 +158,11 @@ func DeployContract(chainsql *Chainsql, opts *TransactOpts, abi abi.ABI, bytecod
 	input, err := c.abi.Pack("", params...)
 	if err != nil {
 		return nil, nil, err
+	}
+	if opts.Expectation == "" {
+		opts.Expectation = util.ValidateSuccess
+	} else if opts.Expectation == util.SendSuccess {
+		return nil, nil, errors.New("contract deploy tx expect must be validate_success or db_success")
 	}
 	txRet, err := c.transact(opts, append(bytecode, input...))
 	if err != nil {

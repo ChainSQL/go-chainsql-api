@@ -44,7 +44,6 @@ func NewChainsql() *Chainsql {
 		},
 	}
 	chainsql.client = net.NewClient()
-	// chainsql.SubmitBase.client = chainsql.client
 	chainsql.SubmitBase.IPrepare = chainsql
 	return chainsql
 }
