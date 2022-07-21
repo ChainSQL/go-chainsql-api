@@ -2,7 +2,6 @@ package crypto
 
 import (
 	"crypto/ed25519"
-	"encoding/hex"
 	"fmt"
 
 	"github.com/ChainSQL/go-chainsql-api/common"
@@ -15,8 +14,8 @@ func Sign(key Key, hash []byte, sequence *uint32, msg []byte) ([]byte, error) {
 		return signEd25519(key.Private(sequence), msg)
 	case common.ECDSA:
 		return signECDSA(key.Private(sequence), hash)
-	case common.SoftGMAlg:
-		return signSoftSM(key.Private(sequence), msg)
+	// case common.SoftGMAlg:
+	// return signSoftSM(key.Private(sequence), msg)
 	default:
 		return nil, fmt.Errorf("Unknown private key format")
 	}
@@ -74,15 +73,15 @@ func verifyECDSA(pubKey, signature, hash []byte) (bool, error) {
 	return sig.Verify(hash, pk), nil
 }
 
-func signSoftSM(privateKey, msg []byte) ([]byte, error) {
-	keyPair, err := PrivKeyFromBytes(privateKey)
-	if err != nil {
-		return nil, err
-	}
-	sign, err := SmSign(keyPair, msg)
-	if err != nil {
-		return nil, err
-	}
-	signByte, err := hex.DecodeString(sign) // 转码
-	return signByte, nil
-}
+// func signSoftSM(privateKey, msg []byte) ([]byte, error) {
+// 	keyPair, err := PrivKeyFromBytes(privateKey)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	sign, err := SmSign(keyPair, msg)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	signByte, err := hex.DecodeString(sign) // 转码
+// 	return signByte, nil
+// }

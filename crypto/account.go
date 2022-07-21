@@ -96,7 +96,7 @@ func GenerateAddress(options string) (string, error) {
 		key, err = NewEd25519Key(seed.SeedHash.Payload())
 		break
 	case common.SoftGMAlg:
-		key, err = GenerateKeyPair(seed)
+		// key, err = GenerateKeyPair(seed)
 		break
 	case common.ECDSA:
 		key, err = NewECDSAKey(seed.SeedHash.Payload())
@@ -170,7 +170,7 @@ func GenerateAddressObj(options string) (*Account, error) {
 		key, err = NewEd25519Key(seed.SeedHash.Payload())
 		break
 	case common.SoftGMAlg:
-		key, err = GenerateKeyPair(seed)
+		// key, err = GenerateKeyPair(seed)
 		break
 	case common.ECDSA:
 		key1 := &ecdsaKey{}

@@ -2,8 +2,9 @@ package crypto
 
 import (
 	"crypto/rand"
-	"github.com/ChainSQL/go-chainsql-api/common"
 	"strings"
+
+	"github.com/ChainSQL/go-chainsql-api/common"
 
 	"github.com/buger/jsonparser"
 )
@@ -65,7 +66,7 @@ func (s *Seed) GenerateKey(keyType common.KeyType) (Key, error) {
 	case common.ECDSA:
 		key, err = NewECDSAKey(s.SeedHash.Payload())
 	case common.SoftGMAlg:
-		key, err = GenerateKeyPairBySeed(s.SeedHash.Payload())
+		// key, err = GenerateKeyPairBySeed(s.SeedHash.Payload())
 	}
 	if err != nil {
 		return nil, err

@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/ChainSQL/go-chainsql-api/common"
-	"github.com/peersafe/gm-crypto/sm3"
 )
 
 func Raw(h Hashable, keyType common.KeyType) (Hash256, []byte, error) {
@@ -45,7 +44,7 @@ func raw(value interface{}, prefix HashPrefix, ignoreSigningFields bool, keyType
 	buf := new(bytes.Buffer)
 	var hasher hash.Hash
 	if keyType == common.SoftGMAlg {
-		hasher = sm3.New()
+		// hasher = sm3.New()
 	} else {
 		hasher = sha512.New()
 	}
