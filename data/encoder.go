@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"crypto/sha512"
 	"fmt"
-	"github.com/ChainSQL/go-chainsql-api/common"
-	"github.com/peersafe/gm-crypto/sm3"
 	"hash"
 	"io"
 	"reflect"
 	"sort"
 	"strings"
+
+	"github.com/ChainSQL/gm-crypto/sm3"
+	"github.com/ChainSQL/go-chainsql-api/common"
 )
 
 func Raw(h Hashable, keyType common.KeyType) (Hash256, []byte, error) {
@@ -26,7 +27,7 @@ func SigningHash(s Signer, keyType common.KeyType) (Hash256, []byte, error) {
 	return raw(s, s.SigningPrefix(), true, keyType)
 }
 
-func Node(h Storer, keyType common.KeyType) (Hash256, []byte, error, ) {
+func Node(h Storer, keyType common.KeyType) (Hash256, []byte, error) {
 	var header bytes.Buffer
 	for _, v := range []interface{}{h.Ledger(), h.Ledger(), h.NodeType(), h.Prefix()} {
 		if err := write(&header, v); err != nil {
@@ -45,7 +46,7 @@ func raw(value interface{}, prefix HashPrefix, ignoreSigningFields bool, keyType
 	var hasher hash.Hash
 	if keyType == common.SoftGMAlg {
 		hasher = sm3.New()
-	}else {
+	} else {
 		hasher = sha512.New()
 	}
 	multi := io.MultiWriter(buf, hasher)
